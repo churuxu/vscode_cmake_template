@@ -1,0 +1,59 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [         
+        {
+             "label": "make-dir",             
+             "type": "shell",
+             "command":"mkdir -f build",
+             "windows": {
+                "command":"cmd /c if not exist build md build", 
+             }, 
+             "problemMatcher":[]
+        },       
+        {            
+            "label": "cmake-generate",
+            "type": "shell",
+            "options": {"cwd": "./build"},
+            "command": "cmake -G Ninja .." ,
+            "problemMatcher":[],
+            "dependsOn":[
+                "make-dir"
+            ],           
+        },
+        {
+            "label": "build",
+            "type": "shell",
+            "options": {"cwd": "./build"},
+            "command": "ninja",
+            "dependsOn":[
+                "cmake-generate"
+            ],
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {                
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "clean",
+            "type":"shell", 
+            "command":"rm -rf build", 
+            "windows": {
+                "command":"cmd /c rd /s /q build", 
+            },           
+            "problemMatcher":[]
+       }
+       ,
+        {
+            "label": "c_cpp_properties-generate",
+            "type":"shell", 
+            "options": {"cwd": ".vscode"},
+            "command":"node generate_c_cpp_properties.js",                       
+            "problemMatcher":[]
+       }
+    ]
+}
