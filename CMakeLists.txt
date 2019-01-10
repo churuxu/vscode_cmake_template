@@ -8,13 +8,20 @@ project(${PROJNAME})
 file(GLOB_RECURSE SRCS *.cpp *.c)
 list(FILTER SRCS EXCLUDE REGEX CMake)
 
-#------------------ glob all folder named inlude as include path -----------------
-file(GLOB_RECURSE INCS LIST_DIRECTORIES true include)
-foreach(NAME IN LISTS INCS)
-if(${NAME} MATCHES ".+include$")
-include_directories(${NAME})
-endif()
+#------------------ glob all folder contains .h file as include folder -----------------
+file(GLOB_RECURSE HEADERS *.h)
+list(FILTER HEADERS EXCLUDE REGEX CMake)
+list(APPEND INCS ${CMAKE_CURRENT_LIST_DIR})
+foreach(FILENAME IN LISTS HEADERS)
+	get_filename_component(DIRNAME ${FILENAME} DIRECTORY)	
+	if(NOT "${DIRNAME}" IN_LIST INCS)
+		list(APPEND INCS ${DIRNAME})		
+	endif()
 endforeach()
+foreach(INC IN LISTS INCS)
+	include_directories(${INC})
+endforeach()
+
 
 #-------------------- commom build flags --------------------
 if(${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
