@@ -1,4 +1,5 @@
 const fs = require("fs");
+const path = require("path");
 const child_process = require("child_process");
 const os = require('os');
 
@@ -43,6 +44,36 @@ for(var i in lines){
 }catch(e){
 	console.log(e);
 }
+
+//find include from workspace
+function readdirSyncRecursive(name,cb){
+	var subfiles = fs.readdirSync(name);
+	for(var i in subfiles){
+		var filename = subfiles[i];
+		var p = path.join(name,filename);
+		if(fs.statSync(p).isDirectory()){
+			readdirSyncRecursive(p,cb);
+		}else{
+			cb(p);
+		}
+	}
+}
+var incs = {};
+
+readdirSyncRecursive("..", function(name){	
+	var p = name.substr(3);
+	if(path.extname(p) == ".h"){
+		var d = path.dirname(p);
+		d = d.replace(/\\/g,"/");
+		incs[d] = 1;
+	}
+});
+
+for(var p in incs){
+	includes.push(p);
+}
+
+
 
 //print 
 console.log("include directories:");
