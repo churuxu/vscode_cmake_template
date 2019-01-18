@@ -5,8 +5,16 @@ file(RELATIVE_PATH PROJNAME ${CMAKE_CURRENT_LIST_DIR}/.. ${CMAKE_CURRENT_LIST_DI
 project(${PROJNAME})
 
 #-------------------- glob all .c .cpp file as source --------------------
-file(GLOB_RECURSE SRCS *.cpp *.c)
-list(FILTER SRCS EXCLUDE REGEX CMake)
+file(GLOB_RECURSE ALL_SRCS *.cpp *.c *.cc)
+list(FILTER ALL_SRCS EXCLUDE REGEX CMake)
+foreach(SRC IN LISTS ALL_SRCS)
+	get_filename_component(FILENAME ${SRC} NAME)
+	if(${FILENAME} MATCHES ".*test.*")
+		list(APPEND TEST_SRCS ${SRC})
+	else()
+		list(APPEND APP_SRCS ${SRC})
+	endif()
+endforeach()
 
 #------------------ glob all folder contains .h file as include folder -----------------
 file(GLOB_RECURSE HEADERS *.h)
@@ -24,6 +32,7 @@ endforeach()
 
 
 #-------------------- commom build flags --------------------
+set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
 if(${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
 	add_compile_options(-D_CRT_SECURE_NO_WARNINGS)
 else()
@@ -35,4 +44,13 @@ else()
 	endif()	
 endif()
 
-add_executable(${PROJNAME} ${SRCS})
+add_executable(${PROJNAME} ${APP_SRCS})
+
+#-------------------- build test application --------------------
+list(LENGTH TEST_SRCS TEST_SRCS_COUNT)
+if(NOT ${TEST_SRCS_COUNT} EQUAL 0)		
+	add_executable(${PROJNAME}-test ${TEST_SRCS})
+	target_compile_definitions(${PROJNAME}-test PUBLIC UNITTEST)	
+endif()
+
+

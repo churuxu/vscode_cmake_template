@@ -54,6 +54,16 @@
             "options": {"cwd": ".vscode"},
             "command":"node generate_c_cpp_properties.js",                       
             "problemMatcher":[]
+       },
+        {
+            "label": "test",
+            "type":"shell", 
+            "options": {"cwd": "./build"},
+            "command":"${workspaceRootFolderName}-test", 
+			"windows": {
+                "command":"cmd /c ${workspaceRootFolderName}-test", 
+            },
+            "problemMatcher":[]
        }
     ]
 }
