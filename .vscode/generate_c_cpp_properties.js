@@ -131,6 +131,7 @@ if(!config){ //not found
     newconf.cppStandard= "c++11";	
 	newconf.intelliSenseMode="gcc-x64";
 	newconf.defines = [];
+	newconf.defines.push("USE_GTEST");	
 	//newconf.compilerPath="g++";
 	props.configurations.push(newconf);
 	if(!props.version)props.version = 4;

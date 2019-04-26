@@ -19,7 +19,7 @@ vscode cmake 项目工程模板
   - bin目录添加到PATH环境变量
 - gcc (windows下使用mingw)
   - bin目录添加到PATH环境变量
-  - 新建环境变量 GDP_PATH=gdb程序完整路径
+  - 新建环境变量 GDB_PATH=gdb程序完整路径
 - node (可选)
   - 添加到PATH环境变量
 - vscode  

@@ -24,6 +24,26 @@
                     "ignoreFailures": true
                 }
             ]
+        },
+		{           
+            "name": "(gdb) Unit Test",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/${workspaceRootFolderName}-test",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": true,
+            "MIMode": "gdb",
+            "miDebuggerPath": "${env:GDB_PATH}",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ]
         }
     ]
 }
