@@ -10,9 +10,14 @@ list(FILTER ALL_SRCS EXCLUDE REGEX CMake)
 foreach(SRC IN LISTS ALL_SRCS)
 	get_filename_component(FILENAME ${SRC} NAME)
 	if(${FILENAME} MATCHES ".*test.*")
-		list(APPEND TEST_SRCS ${SRC})		
+		list(APPEND TEST_SRCS ${SRC})	
+		#message("test:"  ${SRC})	
+	elseif(${FILENAME} MATCHES "^main\.c.*")
+		list(APPEND MAIN_SRCS ${SRC})
+		#message("main:"  ${SRC})
 	else()
-		list(APPEND APP_SRCS ${SRC})		
+		list(APPEND LIB_SRCS ${SRC})
+		#message("lib :"  ${SRC})	
 	endif()
 endforeach()
 
@@ -44,14 +49,30 @@ else()
 	endif()	
 endif()
 
-add_executable(${PROJNAME} ${APP_SRCS})
+
+#-------------------- build main application --------------------
+list(LENGTH MAIN_SRCS MAIN_SRCS_COUNT)
+if(NOT ${MAIN_SRCS_COUNT} EQUAL 0) #has lib
+add_library(${PROJNAME}-lib ${LIB_SRCS})
+add_executable(${PROJNAME} ${MAIN_SRCS})
+target_link_libraries(${PROJNAME} ${PROJNAME}-lib)
+add_dependencies(${PROJNAME} ${PROJNAME}-lib)
+else() #no lib
+add_executable(${PROJNAME} ${LIB_SRCS})
+endif()
 
 #-------------------- build test application --------------------
 list(LENGTH TEST_SRCS TEST_SRCS_COUNT)
-if(NOT ${TEST_SRCS_COUNT} EQUAL 0)		
+if(NOT ${TEST_SRCS_COUNT} EQUAL 0)
+if(NOT ${MAIN_SRCS_COUNT} EQUAL 0) #has lib
+	add_executable(${PROJNAME}-test ${TEST_SRCS})
+	target_link_libraries(${PROJNAME}-test ${PROJNAME}-lib)
+	add_dependencies(${PROJNAME}-test ${PROJNAME}-lib)	
+else()
 	add_executable(${PROJNAME}-test ${ALL_SRCS})
+endif()	
 	target_compile_definitions(${PROJNAME}-test PUBLIC UNITTEST)
-	target_compile_definitions(${PROJNAME}-test PUBLIC USE_GTEST)
+	target_compile_definitions(${PROJNAME}-test PUBLIC USE_GTEST)	
 endif()
 
 
