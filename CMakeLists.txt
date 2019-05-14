@@ -52,13 +52,16 @@ endif()
 
 #-------------------- build main application --------------------
 list(LENGTH MAIN_SRCS MAIN_SRCS_COUNT)
-if(NOT ${MAIN_SRCS_COUNT} EQUAL 0) #has lib
-add_library(${PROJNAME}-lib ${LIB_SRCS})
-add_executable(${PROJNAME} ${MAIN_SRCS})
-target_link_libraries(${PROJNAME} ${PROJNAME}-lib)
-add_dependencies(${PROJNAME} ${PROJNAME}-lib)
-else() #no lib
-add_executable(${PROJNAME} ${LIB_SRCS})
+list(LENGTH LIB_SRCS LIB_SRCS_COUNT)
+if(NOT ${MAIN_SRCS_COUNT} EQUAL 0) #has main
+	add_executable(${PROJNAME} ${MAIN_SRCS})
+	if(NOT ${LIB_SRCS_COUNT} EQUAL 0) #has lib
+		add_library(${PROJNAME}-lib ${LIB_SRCS})
+		target_link_libraries(${PROJNAME} ${PROJNAME}-lib)
+		add_dependencies(${PROJNAME} ${PROJNAME}-lib)
+	endif()
+else() #no main
+	add_executable(${PROJNAME} ${LIB_SRCS})
 endif()
 
 #-------------------- build test application --------------------
