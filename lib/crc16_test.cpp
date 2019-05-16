@@ -1,4 +1,4 @@
-#ifdef USE_GTEST
+﻿#ifdef USE_GTEST
 
 #include "crc16.h"
 
