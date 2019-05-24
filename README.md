@@ -23,13 +23,16 @@ vscode cmake 项目工程模板
 - node (可选)
   - 添加到PATH环境变量
 - vscode  
+  - 安装插件：C/C++、Catch2 and Google Test Explorer
 
 VSCode Task
 ------------
 - build 编译
 - clean 清理
+- build-test 编译单元测试
 - test 运行单元测试
 - c_cpp_properties-generate 生成c_cpp_properties.json
+
 
 
 
