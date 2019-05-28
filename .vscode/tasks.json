@@ -26,7 +26,7 @@
             "label": "build",
             "type": "shell",
             "options": {"cwd": "./build"},
-            "command": "ninja ${workspaceRootFolderName}",
+            "command": "ninja",
             "dependsOn":[
                 "cmake-generate"
             ],
@@ -37,19 +37,7 @@
                 "kind": "build",
                 "isDefault": true
             }
-        },
-        {
-            "label": "build-test",
-            "type": "shell",
-            "options": {"cwd": "./build"},
-            "command": "ninja ${workspaceRootFolderName}-test",
-            "dependsOn":[
-                "cmake-generate"
-            ],
-            "problemMatcher": [
-                "$gcc"
-            ]
-        },
+        },        
         {
             "label": "clean",
             "type":"shell", 

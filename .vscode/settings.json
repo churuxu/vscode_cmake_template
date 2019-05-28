@@ -1,0 +1,12 @@
+{
+  "catch2TestExplorer.debugConfigTemplate": {
+    "type": "cppdbg",
+    "MIMode": "gdb",
+    "miDebuggerPath": "${env:GDB_PATH}",
+    "program": "${exec}",
+    "args": "${args}",
+    "cwd": "${cwd}",
+    "env": "${envObj}",
+    "externalConsole": true
+  }
+}
