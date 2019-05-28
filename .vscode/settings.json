@@ -8,5 +8,9 @@
     "cwd": "${cwd}",
     "env": "${envObj}",
     "externalConsole": true
-  }
+  },
+  "files.associations": {
+    "*.h": "cpp"   
+  },
+  "C_Cpp.errorSquiggles": "Disabled",
 }
