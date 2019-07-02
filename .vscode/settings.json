@@ -2,7 +2,10 @@
   "catch2TestExplorer.debugConfigTemplate": {
     "type": "cppdbg",
     "MIMode": "gdb",
-    "miDebuggerPath": "${env:GDB_PATH}",
+    "windows":{
+      "miDebuggerPath": "gdb.exe"
+    },
+    "miDebuggerPath": "gdb",
     "program": "${exec}",
     "args": "${args}",
     "cwd": "${cwd}",
