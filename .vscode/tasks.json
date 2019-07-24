@@ -16,11 +16,24 @@
             "label": "cmake-generate",
             "type": "shell",
             "options": {"cwd": "./build"},
-            "command": "cmake -G Ninja .." ,
+            "command": "cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Debug" ,
+            "problemMatcher":[],
+            "dependsOn":[
+                "install-package"
+            ],           
+        },
+        {
+            "label": "install-package",
+            "type": "shell",
+            "options": {"cwd": "./build"},
+            "command": "conan install .. -s build_type=Debug --build=missing",
+            "windows":{
+                "command": "cmd /c if exist ../conanfile.txt conan install .. -s build_type=Debug --build=missing -g cmake -g json"            
+            },
             "problemMatcher":[],
             "dependsOn":[
                 "make-dir"
-            ],           
+            ],
         },
         {
             "label": "build",

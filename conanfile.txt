@@ -1,0 +1,2 @@
+[requires]
+json-c/0.13.1@bincrafters/stable

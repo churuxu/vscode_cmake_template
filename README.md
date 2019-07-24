@@ -11,6 +11,7 @@ vscode cmake 项目工程模板
 - 当前目录和子目录下的所有文件名带test的源码作为单元测试源码
 - 如果有单元测试源码，会额外编译生成一个单元测试程序
 - 代码中通过UNITTEST宏区分是单元测试还是主程序
+- 支持conan包管理软件
 
 所需软件
 -----------
@@ -22,9 +23,12 @@ vscode cmake 项目工程模板
   - bin目录添加到PATH环境变量
 - node (可选)
   - 添加到PATH环境变量
+- conan (可选) 
+  - 添加到PATH环境变量
 - vscode  
   - 安装插件：C/C++、Catch2 and Google Test Explorer
 
+  
 VSCode Task
 ------------
 - build 编译

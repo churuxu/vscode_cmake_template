@@ -1,31 +1,77 @@
 cmake_minimum_required(VERSION 3.7)
 
-#-------------------- set folder name as project name -------------------- 
-file(RELATIVE_PATH PROJNAME ${CMAKE_CURRENT_LIST_DIR}/.. ${CMAKE_CURRENT_LIST_DIR})
-project(${PROJNAME})
+# CC CXX CFLAGS CXXFLAGS LDFLAGS
 
-#-------------------- glob all .c .cpp file as source --------------------
-file(GLOB_RECURSE ALL_SRCS *.cpp *.c *.cc)
-list(FILTER ALL_SRCS EXCLUDE REGEX CMake)
+#--------------------- generic settings ----------------------
+ 
+file(RELATIVE_PATH PROJECT_NAME ${CMAKE_CURRENT_LIST_DIR}/.. ${CMAKE_CURRENT_LIST_DIR})
+#set(PROJECT_NAME "proj")
+
+set(SRC_EXTS *.cpp *.c *.cc)
+
+set(HEADER_EXTS *.h *.hpp)
+
+#list(APPEND EXLUDES ".*CMakeFiles.*")
+
+set(FLAGS )
+set(CFLAGS ${FLAGS})
+set(CXXFLAGS ${FLAGS})
+
+set(LDFLAGS )
+
+
+
+
+#-------------------- generic setting --------------------
+set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
+if(${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC) #vc
+	add_compile_options(-D_CRT_SECURE_NO_WARNINGS)
+else() #gcc
+	add_compile_options(-Wall)
+endif()
+
+set(CMAKE_C_FLAGS ${CFLAGS})
+set(CMAKE_CXX_FLAGS ${CXXFLAGS})
+set(CMAKE_SHARED_LINKER_FLAGS ${LDFLAGS})
+set(CMAKE_EXE_LINKER_FLAGS ${LDFLAGS})
+
+
+#-------------------- glob all files --------------------
+file(GLOB_RECURSE ALL_SRCS ${SRC_EXTS})
+file(GLOB_RECURSE ALL_HEADERS ${SRC_EXTS})
+
+
+#-------------------- exlude files --------------------
+list(FILTER ALL_SRCS EXCLUDE REGEX "CMakeFiles")
+list(FILTER ALL_HEADERS EXCLUDE REGEX "CMakeFiles")
+foreach(EXLUDE IN LISTS EXLUDES) 
+	list(FILTER ALL_SRCS EXCLUDE REGEX ${EXLUDE})
+	list(FILTER ALL_HEADERS EXCLUDE REGEX ${EXLUDE})
+endforeach()
+
+#-------------------- src types --------------------
+set(HAS_TEST 0)
+set(HAS_LIB 0)
+set(HAS_MAIN 0)
 foreach(SRC IN LISTS ALL_SRCS)
-	get_filename_component(FILENAME ${SRC} NAME)
+	get_filename_component(FILENAME ${SRC} NAME)	
 	if(${FILENAME} MATCHES ".*test.*")
-		list(APPEND TEST_SRCS ${SRC})	
+		list(APPEND TEST_SRCS ${SRC})
+		set(HAS_TEST 1)
 		#message("test:"  ${SRC})	
-	elseif(${FILENAME} MATCHES "^main\.c.*")
+	elseif(${FILENAME} MATCHES "^main\..*")
 		list(APPEND MAIN_SRCS ${SRC})
+		set(HAS_MAIN 1)
 		#message("main:"  ${SRC})
 	else()
 		list(APPEND LIB_SRCS ${SRC})
+		set(HAS_LIB 1)
 		#message("lib :"  ${SRC})	
 	endif()
 endforeach()
 
-#------------------ glob all folder contains .h file as include folder -----------------
-file(GLOB_RECURSE HEADERS *.h)
-list(FILTER HEADERS EXCLUDE REGEX CMake)
-list(APPEND INCS ${CMAKE_CURRENT_LIST_DIR})
-foreach(FILENAME IN LISTS HEADERS)
+#-------------------- includes --------------------
+foreach(FILENAME IN LISTS ALL_HEADERS)
 	get_filename_component(DIRNAME ${FILENAME} DIRECTORY)	
 	if(NOT "${DIRNAME}" IN_LIST INCS)
 		list(APPEND INCS ${DIRNAME})		
@@ -35,47 +81,51 @@ foreach(INC IN LISTS INCS)
 	include_directories(${INC})
 endforeach()
 
+#-------------------- conan packages --------------------
+if(EXISTS ${CMAKE_CURRENT_LIST_DIR}/conanfile.txt)
+	if(EXISTS ${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+		include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+		conan_global_flags()
+		conan_define_targets()		
+		conan_set_find_paths()
+		conan_set_find_library_paths()
+	else()		
+		message("Please run install conan package first")
+		message("Example: conan install .. -s build_type=Release --build=missing -g cmake")
+		message("See https://docs.conan.io/en/latest/index.html")
+		message(FATAL_ERROR "package not installed")		
+	endif()
+endif()
 
-#-------------------- commom build flags --------------------
-set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
-if(${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
-	add_compile_options(-D_CRT_SECURE_NO_WARNINGS)
+#-------------------- build lib --------------------
+if(${HAS_MAIN})
+	set(LIB_TARGET_NAME ${PROJECT_NAME}-lib)
 else()
-	add_compile_options(-g)	
-	if(${CMAKE_HOST_UNIX})
-		link_libraries(-ldl -lpthread)
-	elseif(${CMAKE_HOST_WIN32})
-		link_libraries(-lpsapi -lws2_32)
+	set(LIB_TARGET_NAME ${PROJECT_NAME})
+endif()
+if(${HAS_LIB})
+	add_library(${LIB_TARGET_NAME} ${LIB_SRCS})
+endif()
+
+#-------------------- build main --------------------
+set(MAIN_TARGET_NAME ${PROJECT_NAME})
+if(${HAS_MAIN})
+	add_executable(${MAIN_TARGET_NAME} ${MAIN_SRCS})
+	if(${HAS_LIB})
+		target_link_libraries(${MAIN_TARGET_NAME} ${LIB_TARGET_NAME} ${CONAN_LIBS})
+		add_dependencies(${MAIN_TARGET_NAME} ${LIB_TARGET_NAME})
 	endif()	
 endif()
 
-
-#-------------------- build main application --------------------
-list(LENGTH MAIN_SRCS MAIN_SRCS_COUNT)
-list(LENGTH LIB_SRCS LIB_SRCS_COUNT)
-if(NOT ${MAIN_SRCS_COUNT} EQUAL 0) #has main
-	add_executable(${PROJNAME} ${MAIN_SRCS})
-	if(NOT ${LIB_SRCS_COUNT} EQUAL 0) #has lib
-		add_library(${PROJNAME}-lib ${LIB_SRCS})
-		target_link_libraries(${PROJNAME} ${PROJNAME}-lib)
-		add_dependencies(${PROJNAME} ${PROJNAME}-lib)
+#-------------------- build unit test --------------------
+set(TEST_TARGET_NAME ${PROJECT_NAME}-test)
+if(${HAS_TEST})
+	add_executable(${TEST_TARGET_NAME} ${TEST_SRCS})
+	if(${HAS_LIB})
+		target_link_libraries(${TEST_TARGET_NAME} ${LIB_TARGET_NAME} ${CONAN_LIBS})
+		add_dependencies(${TEST_TARGET_NAME} ${LIB_TARGET_NAME})
 	endif()
-else() #no main
-	add_executable(${PROJNAME} ${LIB_SRCS})
+	target_compile_definitions(${TEST_TARGET_NAME} PUBLIC UNITTEST)
+	target_compile_definitions(${TEST_TARGET_NAME} PUBLIC USE_GTEST)		
 endif()
-
-#-------------------- build test application --------------------
-list(LENGTH TEST_SRCS TEST_SRCS_COUNT)
-if(NOT ${TEST_SRCS_COUNT} EQUAL 0)
-if(NOT ${MAIN_SRCS_COUNT} EQUAL 0) #has lib
-	add_executable(${PROJNAME}-test ${TEST_SRCS})
-	target_link_libraries(${PROJNAME}-test ${PROJNAME}-lib)
-	add_dependencies(${PROJNAME}-test ${PROJNAME}-lib)	
-else()
-	add_executable(${PROJNAME}-test ${ALL_SRCS})
-endif()	
-	target_compile_definitions(${PROJNAME}-test PUBLIC UNITTEST)
-	target_compile_definitions(${PROJNAME}-test PUBLIC USE_GTEST)	
-endif()
-
 

@@ -5,6 +5,13 @@ const os = require('os');
 
 
 var cc = "g++";
+process.argv.forEach((val, index) => {
+	if(index==2)cc = val;
+});
+console.log("compiler:" + cc);
+
+var conaninfofile = "../build/conanbuildinfo.json";
+
 var args = ["-c","-v","-E","-"];
 
 var startSign = "<...>"
@@ -73,6 +80,20 @@ for(var p in incs){
 	includes.push(p);
 }
 
+//find include from conan package
+try{
+	var conanfiledata = fs.readFileSync(conaninfofile);
+	var conaninfo = JSON.parse(conanfiledata);
+	for(var i=0;i<conaninfo.dependencies.length;i++){
+		var dep = conaninfo.dependencies[i];
+		for(var j=0;j<dep.include_paths.length;j++){
+			var dir = dep.include_paths[i];
+			includes.push(dir);
+		}
+	}
+}catch(e){
+
+}
 
 
 //print 
@@ -131,7 +152,8 @@ if(!config){ //not found
     newconf.cppStandard= "c++11";	
 	newconf.intelliSenseMode="gcc-x64";
 	newconf.defines = [];
-	newconf.defines.push("USE_GTEST");	
+	newconf.defines.push("USE_GTEST");
+	newconf.defines.push("UNITTEST");	
 	//newconf.compilerPath="g++";
 	props.configurations.push(newconf);
 	if(!props.version)props.version = 4;
