@@ -17,24 +17,58 @@ set(FLAGS )
 set(CFLAGS ${FLAGS})
 set(CXXFLAGS ${FLAGS})
 
-set(LDFLAGS )
+set(LDFLAGS "")
 
 
+#for windows gui application  (1=gui 0=console)
+#set(NO_CONSOLE 1)
+
+#main source file name (regex)
+#set(MAIN_FILTER "^main\..*")
+
+#test source file name (regex)
+#set(TEST_FILTER ".*test.*\..*")
 
 
-#-------------------- generic setting --------------------
-set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
+#-------------------- default variable --------------------
+if(NOT DEFINED NO_CONSOLE)
+	set(NO_CONSOLE 0)
+endif()
+if(NOT DEFINED MAIN_FILTER)
+	set(MAIN_FILTER "^main\..*")
+endif()
+if(NOT DEFINED TEST_FILTER)
+	set(TEST_FILTER ".*test.*\..*")
+endif()
+
+
+#-------------------- platform speical --------------------
+if(${WIN32})
+	file(GLOB_RECURSE RC_SRCS "*.rc")
+	add_compile_options(-DUNICODE -D_UNICODE)
+	link_libraries(-lcomctl32 -lpsapi -lws2_32)
+	if(${MINGW} AND ${NO_CONSOLE})		
+		set(LDFLAGS "${LDFLAGS} -Wl,--subsystem,windows")		
+	endif()
+endif()
+
+
+#-------------------- compiler speical --------------------
+
 if(${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC) #vc
 	add_compile_options(-D_CRT_SECURE_NO_WARNINGS)
 else() #gcc
 	add_compile_options(-Wall)
 endif()
 
+
+#-------------------- generic flags --------------------
 set(CMAKE_C_FLAGS ${CFLAGS})
 set(CMAKE_CXX_FLAGS ${CXXFLAGS})
 set(CMAKE_SHARED_LINKER_FLAGS ${LDFLAGS})
 set(CMAKE_EXE_LINKER_FLAGS ${LDFLAGS})
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
 
 #-------------------- glob all files --------------------
 file(GLOB_RECURSE ALL_SRCS ${SRC_EXTS})
@@ -55,11 +89,11 @@ set(HAS_LIB 0)
 set(HAS_MAIN 0)
 foreach(SRC IN LISTS ALL_SRCS)
 	get_filename_component(FILENAME ${SRC} NAME)	
-	if(${FILENAME} MATCHES ".*test.*")
+	if(${FILENAME} MATCHES ${TEST_FILTER})
 		list(APPEND TEST_SRCS ${SRC})
 		set(HAS_TEST 1)
 		#message("test:"  ${SRC})	
-	elseif(${FILENAME} MATCHES "^main\..*")
+	elseif(${FILENAME} MATCHES ${MAIN_FILTER})
 		list(APPEND MAIN_SRCS ${SRC})
 		set(HAS_MAIN 1)
 		#message("main:"  ${SRC})
@@ -80,6 +114,7 @@ endforeach()
 foreach(INC IN LISTS INCS)
 	include_directories(${INC})
 endforeach()
+
 
 #-------------------- conan packages --------------------
 if(EXISTS ${CMAKE_CURRENT_LIST_DIR}/conanfile.txt)
@@ -110,7 +145,7 @@ endif()
 #-------------------- build main --------------------
 set(MAIN_TARGET_NAME ${PROJECT_NAME})
 if(${HAS_MAIN})
-	add_executable(${MAIN_TARGET_NAME} ${MAIN_SRCS})
+	add_executable(${MAIN_TARGET_NAME} ${MAIN_SRCS} ${RC_SRCS})
 	if(${HAS_LIB})
 		target_link_libraries(${MAIN_TARGET_NAME} ${LIB_TARGET_NAME} ${CONAN_LIBS})
 		add_dependencies(${MAIN_TARGET_NAME} ${LIB_TARGET_NAME})
