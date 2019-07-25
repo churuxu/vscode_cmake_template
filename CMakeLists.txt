@@ -19,6 +19,7 @@ set(CXXFLAGS ${FLAGS})
 
 set(LDFLAGS "")
 
+set(LIBS "-lz")
 
 #for windows gui application  (1=gui 0=console)
 #set(NO_CONSOLE 1)
@@ -69,6 +70,10 @@ set(CMAKE_SHARED_LINKER_FLAGS ${LDFLAGS})
 set(CMAKE_EXE_LINKER_FLAGS ${LDFLAGS})
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
+
+if(DEFINED LIBS)
+	link_libraries(${LIBS})
+endif()
 
 #-------------------- glob all files --------------------
 file(GLOB_RECURSE ALL_SRCS ${SRC_EXTS})

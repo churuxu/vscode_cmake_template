@@ -1,15 +1,16 @@
 #include <stdio.h>
 #include "crc16.h"
-#include "json-c/json.h"
+#include "zlib.h"
 
 
 int main(){
 	uint16_t crc = crc16(0, (uint8_t*)"123456", 6);
-	printf("hello world\n");
-	printf("crc=%d\n", (int)crc);	
-	struct json_object* obj = json_tokener_parse("{\"id\":123,\"name\":\"Abc\"}");
+	printf("123456\n");
+	printf("crc16=%04x\n", (int)crc);	
 	
-	printf("str :%s\n", json_object_to_json_string(obj));
+	uint32_t crc32 = crc32_z(0, (uint8_t*)"123456", 6);
+	printf("crc32=%08x\n", crc32);
+	
 	return 0;
 }
 
