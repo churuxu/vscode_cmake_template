@@ -78,7 +78,16 @@ endif()
 #-------------------- glob all files --------------------
 file(GLOB_RECURSE ALL_SRCS ${SRC_EXTS})
 file(GLOB_RECURSE ALL_HEADERS ${SRC_EXTS})
+file(GLOB_RECURSE SUB_CMAKES */CMakeLists.txt)
 
+#-------------------- sub cmake directory --------------------
+file(WRITE ${CMAKE_BINARY_DIR}/packages.cmake "")
+foreach(CMAKEFILE IN LISTS SUB_CMAKES)
+	get_filename_component(DIR ${CMAKEFILE} DIRECTORY)
+	message("sub dir:${DIR}")
+	add_subdirectory(${DIR})
+endforeach()
+include(${CMAKE_BINARY_DIR}/packages.cmake)
 
 #-------------------- exlude files --------------------
 list(FILTER ALL_SRCS EXCLUDE REGEX "CMakeFiles")

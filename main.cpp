@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include "crc16.h"
 #include "zlib.h"
-
+#include "json.h"
 
 int main(){
 	uint16_t crc = crc16(0, (uint8_t*)"123456", 6);
@@ -10,7 +10,8 @@ int main(){
 	
 	uint32_t crc32 = crc32_z(0, (uint8_t*)"123456", 6);
 	printf("crc32=%08x\n", crc32);
-	
+	auto json = json_parse("{\"id\":123}", 3);
+	printf("%d\n", (int)(*json)["id"]);
 	return 0;
 }
 
