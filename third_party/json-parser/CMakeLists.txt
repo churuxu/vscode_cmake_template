@@ -190,10 +190,12 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${BUILD_DIR})
 
 #-------------------- build lib --------------------
 set(TARGET_FILE ${BUILD_DIR}/lib${PACKAGE_TARGET}.a)
-message("TARGET:${TARGET_FILE}")
 if(EXISTS ${TARGET_FILE})
-	add_library(${PACKAGE_TARGET} STATIC IMPORTED ${TARGET_FILE})
+	message("-- Import ${TARGET_FILE}")
+	add_library(${PACKAGE_TARGET} STATIC IMPORTED GLOBAL)
+	set_target_properties(${PACKAGE_TARGET} PROPERTIES IMPORTED_LOCATION ${TARGET_FILE})
 else()
+	message("-- Build ${TARGET_FILE}")
 	add_library(${PACKAGE_TARGET} ${C_SRCS} ${CXX_SRCS})
 endif()
 

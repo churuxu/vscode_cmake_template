@@ -19,7 +19,9 @@ set(CXXFLAGS ${FLAGS})
 
 set(LDFLAGS "")
 
-set(LIBS "-lz -ljson-parser -lduktape")
+#set(LIBS "-lz -ljson-parser -lduktape")
+
+set(DEPS z json-parser duktape)
 
 
 #for windows gui application  (1=gui 0=console)
@@ -43,14 +45,17 @@ if(NOT DEFINED TEST_FILTER)
 	set(TEST_FILTER ".*test.*\..*")
 endif()
 
+project(${PROJECT_NAME})
 
 #-------------------- platform speical --------------------
 if(${WIN32})
 	file(GLOB_RECURSE RC_SRCS "*.rc")
 	add_compile_options(-DUNICODE -D_UNICODE)
 	link_libraries(-lcomctl32 -lpsapi -lws2_32)
-	if(${MINGW} AND ${NO_CONSOLE})		
-		set(LDFLAGS "${LDFLAGS} -Wl,--subsystem,windows")		
+	if(${MINGW})
+		if(${NO_CONSOLE})
+			set(LDFLAGS "${LDFLAGS} -Wl,--subsystem,windows")
+		endif()
 	endif()
 endif()
 
@@ -76,6 +81,7 @@ if(DEFINED LIBS)
 	link_libraries(${LIBS})
 endif()
 
+
 #-------------------- glob all files --------------------
 file(GLOB_RECURSE ALL_SRCS ${SRC_EXTS})
 file(GLOB_RECURSE ALL_HEADERS ${SRC_EXTS})
@@ -94,6 +100,7 @@ endforeach()
 file(GLOB_RECURSE SUB_EXPORTS *exports.cmake)
 foreach(EXP IN LISTS SUB_EXPORTS)
 	#get_filename_component(DIR ${EXP} DIRECTORY)
+	#message(${EXP})
 	include(${EXP})
 endforeach()
 
@@ -139,23 +146,7 @@ foreach(INC IN LISTS INCS)
 endforeach()
 
 
-#-------------------- conan packages --------------------
-if(EXISTS ${CMAKE_CURRENT_LIST_DIR}/conanfile.txt)
-	if(EXISTS ${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-		include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-		conan_global_flags()
-		conan_define_targets()		
-		conan_set_find_paths()
-		conan_set_find_library_paths()
-	else()		
-		message("Please run install conan package first")
-		message("Example: conan install .. -s build_type=Release --build=missing -g cmake")
-		message("See https://docs.conan.io/en/latest/index.html")
-		message(FATAL_ERROR "package not installed")		
-	endif()
-endif()
-
-#-------------------- build lib --------------------
+ #-------------------- build lib --------------------
 if(${HAS_MAIN})
 	set(LIB_TARGET_NAME ${PROJECT_NAME}-lib)
 else()
@@ -173,10 +164,10 @@ if(${HAS_MAIN})
 		target_link_libraries(${MAIN_TARGET_NAME} ${LIB_TARGET_NAME} ${CONAN_LIBS})
 		add_dependencies(${MAIN_TARGET_NAME} ${LIB_TARGET_NAME})
 	endif()	
-	foreach(DEP IN LISTS DEPEND_TARGETS)
+	foreach(DEP IN LISTS DEPS)		
 		target_link_libraries(${MAIN_TARGET_NAME} ${DEP} )
 		add_dependencies(${MAIN_TARGET_NAME} ${DEP})		
-	endforeach()
+	endforeach()	
 endif()
 
 #-------------------- build unit test --------------------
@@ -187,7 +178,7 @@ if(${HAS_TEST})
 		target_link_libraries(${TEST_TARGET_NAME} ${LIB_TARGET_NAME} ${CONAN_LIBS})
 		add_dependencies(${TEST_TARGET_NAME} ${LIB_TARGET_NAME})
 	endif()
-	foreach(DEP IN LISTS DEPEND_TARGETS)
+	foreach(DEP IN LISTS DEPS)
 		target_link_libraries(${MAIN_TARGET_NAME} ${DEP} )
 		add_dependencies(${MAIN_TARGET_NAME} ${DEP})		
 	endforeach()	
