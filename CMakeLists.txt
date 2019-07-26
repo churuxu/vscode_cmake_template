@@ -21,7 +21,7 @@ set(LDFLAGS "")
 
 #set(LIBS "-lz -ljson-parser -lduktape")
 
-set(DEPS z json-parser duktape)
+set(DEPS json-parser duktape curl ssl crypto z )
 
 
 #for windows gui application  (1=gui 0=console)

@@ -126,9 +126,11 @@ endforeach()
 
 #-------------------- build lib --------------------
 set(LIB_TARGET_NAME ${PACKAGE_NAME})
-if(${HAS_LIB})
-	add_library(${LIB_TARGET_NAME} ${LIB_SRCS})
-	#export(TARGETS ${LIB_TARGET_NAME} FILE ${CMAKE_BINARY_DIR}/${LIB_TARGET_NAME}_targets.cmake)
+if(NOT TARGET ${LIB_TARGET_NAME})	
+	if(${HAS_LIB})
+		add_library(${LIB_TARGET_NAME} ${LIB_SRCS})
+		#export(TARGETS ${LIB_TARGET_NAME} FILE ${CMAKE_BINARY_DIR}/${LIB_TARGET_NAME}_targets.cmake)
+	endif()
 endif()
 
 #-------------------- export info --------------------

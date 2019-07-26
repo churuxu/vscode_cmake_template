@@ -4,13 +4,13 @@ cmake_minimum_required(VERSION 3.10)
 
 
 
-set(PACKAGE_NAME zlib)
+set(PACKAGE_NAME openssl)
 
-set(PACKAGE_VERSION 1.2.11)
+set(PACKAGE_VERSION 1.1.1c)
 
-set(PACKAGE_URL https://downloads.sourceforge.net/project/libpng/zlib/${PACKAGE_VERSION}/zlib-${PACKAGE_VERSION}.tar.gz)
+set(PACKAGE_URL https://www.openssl.org/source/openssl-${PACKAGE_VERSION}.tar.gz)
 
-set(PACKAGE_TARGET z)
+set(PACKAGE_TARGET openssl)
 
 #message("package ${PACKAGE_NAME} ${PACKAGE_VERSION}")
 
@@ -18,13 +18,7 @@ set(PACKAGE_TARGET z)
 #-------------------- package build settings --------------------
 
 
-
-list(APPEND EXLUDES ".*contrib/.*")
-list(APPEND EXLUDES ".*examples/.*")
-list(APPEND EXLUDES ".*test/.*")
-
-
-set(FLAGS )
+set(FLAGS "-DUNICODE -D_UNICODE -DWIN32_LEAN_AND_MEAN -Wno-overflow")
 set(CFLAGS ${FLAGS})
 set(CXXFLAGS ${FLAGS})
 
@@ -40,6 +34,30 @@ endif()
 if("${CMAKE_BUILD_TYPE}" STREQUAL "")
 	set(CMAKE_BUILD_TYPE Release)
 endif()
+
+set(CACHE_DIR ${PACKAGE_CACHE_DIR}/${PACKAGE_NAME}/${PACKAGE_VERSION})
+set(SOURCE_DIR ${CACHE_DIR}/source/openssl-${PACKAGE_VERSION})
+
+
+list(APPEND EXLUDES ".*asm/.*")
+list(APPEND EXLUDES ".*LPdir.*")
+list(APPEND EXLUDES ".*ppccap.c")
+list(APPEND EXLUDES ".*armcap.c")
+list(APPEND EXLUDES ".*s390xcap.c")
+list(APPEND EXLUDES ".*sparcv9cap.c")
+list(APPEND EXLUDES ".*ecp_nistz256_table.c") 
+list(APPEND EXLUDES ".*eng_devcrypto.c") 
+list(APPEND EXLUDES ".*poly1305_base2_44.c") 
+ 
+
+
+include_directories(${SOURCE_DIR}/include)
+include_directories(${SOURCE_DIR}/crypto/include)
+include_directories(${SOURCE_DIR}/crypto)
+include_directories(${SOURCE_DIR}/crypto/modes)
+include_directories(${SOURCE_DIR}/crypto/ec/curve448)
+include_directories(${SOURCE_DIR}/crypto/ec/curve448/arch_32)
+include_directories(${SOURCE_DIR})
 
 macro(save_build_info filename)
 	set(info_ "")
@@ -126,12 +144,10 @@ macro(fetch_source url dir)
 	unpack_source(${fetch_type_} ${dir} ${fetch_name_})
 endmacro()
 
-set(CACHE_DIR ${PACKAGE_CACHE_DIR}/${PACKAGE_NAME}/${PACKAGE_VERSION})
-set(SOURCE_DIR ${CACHE_DIR}/source)
+
 fetch_source(${PACKAGE_URL} ${CACHE_DIR})
 
-
-
+file(COPY ${CMAKE_CURRENT_LIST_DIR}/config/ DESTINATION ${SOURCE_DIR})
 
 #-------------------- generic flags --------------------
 set(CMAKE_C_FLAGS ${CFLAGS})
@@ -147,18 +163,19 @@ endif()
 
 #-------------------- glob all files --------------------
 #message("source dir: ${SOURCE_DIR}")
-file(GLOB_RECURSE C_SRCS ${SOURCE_DIR}/*.c)
-file(GLOB_RECURSE CXX_SRCS ${SOURCE_DIR}/*.cpp)
+
+file(GLOB_RECURSE CRYPTO_SRCS ${SOURCE_DIR}/crypto/*.c)
+file(GLOB_RECURSE SSL_SRCS ${SOURCE_DIR}/ssl/*.c)
 file(GLOB_RECURSE ALL_HEADERS ${SOURCE_DIR}/*.h)
 
 
 #-------------------- exlude files --------------------
-list(FILTER C_SRCS EXCLUDE REGEX "CMakeFiles")
-list(FILTER CXX_SRCS EXCLUDE REGEX "CMakeFiles")
+list(FILTER CRYPTO_SRCS EXCLUDE REGEX "CMakeFiles")
+list(FILTER SSL_SRCS EXCLUDE REGEX "CMakeFiles")
 list(FILTER ALL_HEADERS EXCLUDE REGEX "CMakeFiles")
 foreach(EXLUDE IN LISTS EXLUDES) 
-	list(FILTER C_SRCS EXCLUDE REGEX ${EXLUDE})
-	list(FILTER CXX_SRCS EXCLUDE REGEX ${EXLUDE})
+	list(FILTER CRYPTO_SRCS EXCLUDE REGEX ${EXLUDE})
+	list(FILTER SSL_SRCS EXCLUDE REGEX ${EXLUDE})
 	list(FILTER ALL_HEADERS EXCLUDE REGEX ${EXLUDE})
 endforeach()
 
@@ -171,7 +188,7 @@ foreach(FILENAME IN LISTS ALL_HEADERS)
 	endif()
 endforeach()
 foreach(INC IN LISTS INCS)
-	include_directories(${INC})
+	#include_directories(${INC})
 endforeach()
 
 #-------------------- get build hash --------------------
@@ -190,8 +207,8 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${BUILD_DIR})
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${BUILD_DIR})
 
 
-#-------------------- build lib --------------------
-set(TARGET_NAME ${PACKAGE_TARGET})
+#-------------------- build crypto lib --------------------
+set(TARGET_NAME crypto)
 set(TARGET_FILE ${BUILD_DIR}/lib${TARGET_NAME}.a)
 if(NOT TARGET ${TARGET_NAME})
 	if(EXISTS ${TARGET_FILE})
@@ -200,7 +217,21 @@ if(NOT TARGET ${TARGET_NAME})
 		set_target_properties(${TARGET_NAME} PROPERTIES IMPORTED_LOCATION ${TARGET_FILE})
 	else()
 		message("-- Build ${TARGET_FILE}")
-		add_library(${TARGET_NAME} ${C_SRCS} ${CXX_SRCS})
+		add_library(${TARGET_NAME} ${CRYPTO_SRCS})
+	endif()
+endif()
+
+#-------------------- build ssl lib --------------------
+set(TARGET_NAME ssl)
+set(TARGET_FILE ${BUILD_DIR}/lib${TARGET_NAME}.a)
+if(NOT TARGET ${TARGET_NAME})
+	if(EXISTS ${TARGET_FILE})
+		message("-- Import ${TARGET_FILE}")
+		add_library(${TARGET_NAME} STATIC IMPORTED GLOBAL)
+		set_target_properties(${TARGET_NAME} PROPERTIES IMPORTED_LOCATION ${TARGET_FILE})
+	else()
+		message("-- Build ${TARGET_FILE}")
+		add_library(${TARGET_NAME} ${SSL_SRCS} )
 	endif()
 endif()
 
@@ -209,9 +240,9 @@ set(EXPORT_INFO "")
 set(EXPORT_INFO "${EXPORT_INFO}#package ${PACKAGE_NAME}\n")
 set(EXPORT_INFO "${EXPORT_INFO}link_directories(${BUILD_DIR})\n")
 #set(EXPORT_INFO "${EXPORT_INFO}link_libraries(${PACKAGE_TARGET})\n")
-foreach(DIR IN LISTS INCS)
-	set(EXPORT_INFO "${EXPORT_INFO}include_directories(${DIR})\n")
-endforeach()
+#foreach(DIR IN LISTS INCS)
+	set(EXPORT_INFO "${EXPORT_INFO}include_directories(${SOURCE_DIR}/include)\n")
+#endforeach()
 
 set(EXPORT_FILE ${CMAKE_BINARY_DIR}/${PACKAGE_NAME}.exports.cmake)
 

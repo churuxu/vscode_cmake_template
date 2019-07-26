@@ -3,33 +3,31 @@ cmake_minimum_required(VERSION 3.10)
 ### cmake template for build package with remote source ### 
 
 
+set(PACKAGE_NAME curl)
 
-set(PACKAGE_NAME zlib)
+set(PACKAGE_VERSION 7.65.1)
 
-set(PACKAGE_VERSION 1.2.11)
+set(PACKAGE_URL https://curl.haxx.se/download/curl-${PACKAGE_VERSION}.tar.gz)
 
-set(PACKAGE_URL https://downloads.sourceforge.net/project/libpng/zlib/${PACKAGE_VERSION}/zlib-${PACKAGE_VERSION}.tar.gz)
-
-set(PACKAGE_TARGET z)
-
-#message("package ${PACKAGE_NAME} ${PACKAGE_VERSION}")
+set(PACKAGE_TARGET curl)
 
 
 #-------------------- package build settings --------------------
 
 
+set(OPENSSL_CMAKE_DIR ${CMAKE_CURRENT_LIST_DIR}/../openssl)
+add_subdirectory(${OPENSSL_CMAKE_DIR} ${CMAKE_BINARY_DIR}/openssl)
+include(${CMAKE_BINARY_DIR}/openssl.exports.cmake)
 
-list(APPEND EXLUDES ".*contrib/.*")
-list(APPEND EXLUDES ".*examples/.*")
-list(APPEND EXLUDES ".*test/.*")
 
-
-set(FLAGS )
+set(FLAGS "-DCURL_STATICLIB -DBUILDING_LIBCURL -DUSE_OPENSSL -DENABLE_IPV6 -DCURL_DISABLE_LDAP -DHAVE_GETADDRINFO")
 set(CFLAGS ${FLAGS})
 set(CXXFLAGS ${FLAGS})
 
 #-------------------- generic --------------------
-project(${PACKAGE_NAME})
+
+#message("package ${PACKAGE_NAME} ${PACKAGE_VERSION}")
+
 
 if(CMAKE_HOST_WIN32)
 	set(PACKAGE_CACHE_DIR D:/.xpackage) 
@@ -40,6 +38,12 @@ endif()
 if("${CMAKE_BUILD_TYPE}" STREQUAL "")
 	set(CMAKE_BUILD_TYPE Release)
 endif()
+
+set(CACHE_DIR ${PACKAGE_CACHE_DIR}/${PACKAGE_NAME}/${PACKAGE_VERSION})
+set(SOURCE_DIR ${CACHE_DIR}/source/curl-${PACKAGE_VERSION})
+
+include_directories(${SOURCE_DIR}/include)
+include_directories(${SOURCE_DIR}/lib)
 
 macro(save_build_info filename)
 	set(info_ "")
@@ -96,7 +100,7 @@ macro(unpack_source type dir name)
 			message(FATAL_ERROR "not support type ${type}")
 		endif()
 		if(cmd_)
-			message("unpack ${dir}/${name}")
+			message("${cmd_}")
 			execute_process(RESULT_VARIABLE result_ COMMAND ${cmd_})
 		endif()
 		if(0 EQUAL result_)
@@ -126,9 +130,9 @@ macro(fetch_source url dir)
 	unpack_source(${fetch_type_} ${dir} ${fetch_name_})
 endmacro()
 
-set(CACHE_DIR ${PACKAGE_CACHE_DIR}/${PACKAGE_NAME}/${PACKAGE_VERSION})
-set(SOURCE_DIR ${CACHE_DIR}/source)
+
 fetch_source(${PACKAGE_URL} ${CACHE_DIR})
+
 
 
 
@@ -147,8 +151,8 @@ endif()
 
 #-------------------- glob all files --------------------
 #message("source dir: ${SOURCE_DIR}")
-file(GLOB_RECURSE C_SRCS ${SOURCE_DIR}/*.c)
-file(GLOB_RECURSE CXX_SRCS ${SOURCE_DIR}/*.cpp)
+file(GLOB_RECURSE C_SRCS ${SOURCE_DIR}/lib/*.c)
+file(GLOB_RECURSE CXX_SRCS ${SOURCE_DIR}/lib/*.cpp)
 file(GLOB_RECURSE ALL_HEADERS ${SOURCE_DIR}/*.h)
 
 
@@ -171,7 +175,7 @@ foreach(FILENAME IN LISTS ALL_HEADERS)
 	endif()
 endforeach()
 foreach(INC IN LISTS INCS)
-	include_directories(${INC})
+	#include_directories(${INC})
 endforeach()
 
 #-------------------- get build hash --------------------
@@ -208,10 +212,11 @@ endif()
 set(EXPORT_INFO "")
 set(EXPORT_INFO "${EXPORT_INFO}#package ${PACKAGE_NAME}\n")
 set(EXPORT_INFO "${EXPORT_INFO}link_directories(${BUILD_DIR})\n")
+set(EXPORT_INFO "${EXPORT_INFO}add_definitions(-DCURL_STATICLIB)\n")
 #set(EXPORT_INFO "${EXPORT_INFO}link_libraries(${PACKAGE_TARGET})\n")
-foreach(DIR IN LISTS INCS)
-	set(EXPORT_INFO "${EXPORT_INFO}include_directories(${DIR})\n")
-endforeach()
+#foreach(DIR IN LISTS INCS)
+	set(EXPORT_INFO "${EXPORT_INFO}include_directories(${SOURCE_DIR}/include)\n")
+#endforeach()
 
 set(EXPORT_FILE ${CMAKE_BINARY_DIR}/${PACKAGE_NAME}.exports.cmake)
 
@@ -221,5 +226,6 @@ endif()
 if(NOT "${OLD_INFO}" STREQUAL "${EXPORT_INFO}")
 	file(WRITE ${EXPORT_FILE} "${EXPORT_INFO}")
 endif()
+
 
 
