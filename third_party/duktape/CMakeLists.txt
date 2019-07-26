@@ -1,11 +1,13 @@
 cmake_minimum_required(VERSION 3.7)
 
-# CC CXX CFLAGS CXXFLAGS LDFLAGS
+### cmake template for build package with local source ### 
 
-#--------------------- generic settings ----------------------
+
+
+#-------------------- generic setting --------------------
  
-file(RELATIVE_PATH PROJECT_NAME ${CMAKE_CURRENT_LIST_DIR}/.. ${CMAKE_CURRENT_LIST_DIR})
-#set(PROJECT_NAME "proj")
+file(RELATIVE_PATH PACKAGE_NAME ${CMAKE_CURRENT_LIST_DIR}/.. ${CMAKE_CURRENT_LIST_DIR})
+
 
 set(SRC_EXTS *.cpp *.c *.cc)
 
@@ -19,8 +21,7 @@ set(CXXFLAGS ${FLAGS})
 
 set(LDFLAGS "")
 
-set(LIBS "-lz -ljson-parser -lduktape")
-
+set(LIBS "")
 
 #for windows gui application  (1=gui 0=console)
 #set(NO_CONSOLE 1)
@@ -81,22 +82,6 @@ file(GLOB_RECURSE ALL_SRCS ${SRC_EXTS})
 file(GLOB_RECURSE ALL_HEADERS ${SRC_EXTS})
 file(GLOB_RECURSE SUB_CMAKES */CMakeLists.txt)
 
-#-------------------- sub cmake directory --------------------
-foreach(CMAKEFILE IN LISTS SUB_CMAKES)
-	get_filename_component(DIR ${CMAKEFILE} DIRECTORY)
-	#message("sub dir:${DIR}")
-	add_subdirectory(${DIR})
-	list(FILTER ALL_SRCS EXCLUDE REGEX "${DIR}/.*")
-	list(FILTER ALL_HEADERS EXCLUDE REGEX "${DIR}/.*")
-endforeach()
-
-#-------------------- sub cmake exports --------------------
-file(GLOB_RECURSE SUB_EXPORTS *exports.cmake)
-foreach(EXP IN LISTS SUB_EXPORTS)
-	#get_filename_component(DIR ${EXP} DIRECTORY)
-	include(${EXP})
-endforeach()
-
 
 #-------------------- exlude files --------------------
 list(FILTER ALL_SRCS EXCLUDE REGEX "CMakeFiles")
@@ -139,59 +124,34 @@ foreach(INC IN LISTS INCS)
 endforeach()
 
 
-#-------------------- conan packages --------------------
-if(EXISTS ${CMAKE_CURRENT_LIST_DIR}/conanfile.txt)
-	if(EXISTS ${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-		include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-		conan_global_flags()
-		conan_define_targets()		
-		conan_set_find_paths()
-		conan_set_find_library_paths()
-	else()		
-		message("Please run install conan package first")
-		message("Example: conan install .. -s build_type=Release --build=missing -g cmake")
-		message("See https://docs.conan.io/en/latest/index.html")
-		message(FATAL_ERROR "package not installed")		
-	endif()
-endif()
-
 #-------------------- build lib --------------------
-if(${HAS_MAIN})
-	set(LIB_TARGET_NAME ${PROJECT_NAME}-lib)
-else()
-	set(LIB_TARGET_NAME ${PROJECT_NAME})
-endif()
+set(LIB_TARGET_NAME ${PACKAGE_NAME})
 if(${HAS_LIB})
-	add_library(${LIB_TARGET_NAME} ${LIB_SRCS})	
+	add_library(${LIB_TARGET_NAME} ${LIB_SRCS})
+	#export(TARGETS ${LIB_TARGET_NAME} FILE ${CMAKE_BINARY_DIR}/${LIB_TARGET_NAME}_targets.cmake)
 endif()
 
-#-------------------- build main --------------------
-set(MAIN_TARGET_NAME ${PROJECT_NAME})
-if(${HAS_MAIN})
-	add_executable(${MAIN_TARGET_NAME} ${MAIN_SRCS} ${RC_SRCS})
-	if(${HAS_LIB})
-		target_link_libraries(${MAIN_TARGET_NAME} ${LIB_TARGET_NAME} ${CONAN_LIBS})
-		add_dependencies(${MAIN_TARGET_NAME} ${LIB_TARGET_NAME})
-	endif()	
-	foreach(DEP IN LISTS DEPEND_TARGETS)
-		target_link_libraries(${MAIN_TARGET_NAME} ${DEP} )
-		add_dependencies(${MAIN_TARGET_NAME} ${DEP})		
-	endforeach()
+#-------------------- export info --------------------
+get_target_property(BUILD_DIR ${LIB_TARGET_NAME} BINARY_DIR)
+
+set(EXPORT_INFO "")
+set(EXPORT_INFO "${EXPORT_INFO}#package ${PACKAGE_NAME}\n")
+set(EXPORT_INFO "${EXPORT_INFO}link_directories(${BUILD_DIR})\n")
+#set(EXPORT_INFO "${EXPORT_INFO}link_libraries(${PACKAGE_TARGET})\n")
+foreach(DIR IN LISTS INCS)
+	set(EXPORT_INFO "${EXPORT_INFO}include_directories(${DIR})\n")
+endforeach()
+
+set(EXPORT_FILE ${CMAKE_BINARY_DIR}/${PACKAGE_NAME}.exports.cmake)
+
+if(EXISTS ${EXPORT_FILE})
+	file(READ ${EXPORT_FILE} OLD_INFO)
+endif()
+if(NOT "${OLD_INFO}" STREQUAL "${EXPORT_INFO}")
+	file(WRITE ${EXPORT_FILE} "${EXPORT_INFO}")
 endif()
 
-#-------------------- build unit test --------------------
-set(TEST_TARGET_NAME ${PROJECT_NAME}-test)
-if(${HAS_TEST})
-	add_executable(${TEST_TARGET_NAME} ${TEST_SRCS})
-	if(${HAS_LIB})
-		target_link_libraries(${TEST_TARGET_NAME} ${LIB_TARGET_NAME} ${CONAN_LIBS})
-		add_dependencies(${TEST_TARGET_NAME} ${LIB_TARGET_NAME})
-	endif()
-	foreach(DEP IN LISTS DEPEND_TARGETS)
-		target_link_libraries(${MAIN_TARGET_NAME} ${DEP} )
-		add_dependencies(${MAIN_TARGET_NAME} ${DEP})		
-	endforeach()	
-	target_compile_definitions(${TEST_TARGET_NAME} PUBLIC UNITTEST)
-	target_compile_definitions(${TEST_TARGET_NAME} PUBLIC USE_GTEST)		
-endif()
+
+
+
 

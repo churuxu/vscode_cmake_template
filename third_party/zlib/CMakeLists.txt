@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 3.10)
 
+### cmake template for build package with remote source ### 
+
+
 
 set(PACKAGE_NAME zlib)
 
@@ -9,7 +12,24 @@ set(PACKAGE_URL https://downloads.sourceforge.net/project/libpng/zlib/${PACKAGE_
 
 set(PACKAGE_TARGET z)
 
-message("package ${PACKAGE_NAME} ${PACKAGE_VERSION}")
+#message("package ${PACKAGE_NAME} ${PACKAGE_VERSION}")
+
+
+#-------------------- package build settings --------------------
+
+
+
+list(APPEND EXLUDES ".*contrib/.*")
+list(APPEND EXLUDES ".*examples/.*")
+list(APPEND EXLUDES ".*test/.*")
+
+
+set(FLAGS )
+set(CFLAGS ${FLAGS})
+set(CXXFLAGS ${FLAGS})
+
+#-------------------- generic --------------------
+
 
 if(CMAKE_HOST_WIN32)
 	set(PACKAGE_CACHE_DIR D:/.xpackage) 
@@ -55,7 +75,7 @@ macro(download_source type url dir name)
 		endif()
 		file(TOUCH ${dir}/source.downloaded)
 	else()
-		message("source already downloaded")
+		#message("source already downloaded")
 	endif()
 endmacro()
 
@@ -76,7 +96,7 @@ macro(unpack_source type dir name)
 			message(FATAL_ERROR "not support type ${type}")
 		endif()
 		if(cmd_)
-			message("${cmd_}")
+			message("unpack ${dir}/${name}")
 			execute_process(RESULT_VARIABLE result_ COMMAND ${cmd_})
 		endif()
 		if(0 EQUAL result_)
@@ -86,7 +106,7 @@ macro(unpack_source type dir name)
 		endif()		
 		file(TOUCH ${dir}/source.unpacked)
 	else()
-		message("source already unpacked")
+		#message("source already unpacked")
 	endif()
 endmacro()
 
@@ -111,19 +131,6 @@ set(SOURCE_DIR ${CACHE_DIR}/source)
 fetch_source(${PACKAGE_URL} ${CACHE_DIR})
 
 
-#-------------------- package build settings --------------------
-
-
-
-list(APPEND EXLUDES ".*contrib/.*")
-list(APPEND EXLUDES ".*examples/.*")
-list(APPEND EXLUDES ".*test/.*")
-
-
-set(FLAGS )
-set(CFLAGS ${FLAGS})
-set(CXXFLAGS ${FLAGS})
-
 
 
 #-------------------- generic flags --------------------
@@ -139,7 +146,7 @@ if(DEFINED LIBS)
 endif()
 
 #-------------------- glob all files --------------------
-message("source dir: ${SOURCE_DIR}")
+#message("source dir: ${SOURCE_DIR}")
 file(GLOB_RECURSE C_SRCS ${SOURCE_DIR}/*.c)
 file(GLOB_RECURSE CXX_SRCS ${SOURCE_DIR}/*.cpp)
 file(GLOB_RECURSE ALL_HEADERS ${SOURCE_DIR}/*.h)
@@ -172,7 +179,7 @@ endforeach()
 set(INFO_FILE ${CMAKE_BINARY_DIR}/build_info.txt) 
 save_build_info(${INFO_FILE})
 file(MD5 ${INFO_FILE} BUILD_HASH)
-message("build_hash: ${BUILD_HASH}")
+#message("build_hash: ${BUILD_HASH}")
 set(BUILD_DIR ${CACHE_DIR}/build/${BUILD_HASH})
 file(MAKE_DIRECTORY ${BUILD_DIR})
 file(COPY ${INFO_FILE} DESTINATION ${BUILD_DIR})
@@ -193,12 +200,19 @@ else()
 endif()
 
 #-------------------- export info --------------------
+set(EXPORT_INFO "")
 set(EXPORT_INFO "${EXPORT_INFO}#package ${PACKAGE_NAME}\n")
 set(EXPORT_INFO "${EXPORT_INFO}link_directories(${BUILD_DIR})\n")
-set(EXPORT_INFO "${EXPORT_INFO}link_libraries(${PACKAGE_TARGET})\n")
+#set(EXPORT_INFO "${EXPORT_INFO}link_libraries(${PACKAGE_TARGET})\n")
 foreach(DIR IN LISTS INCS)
-set(EXPORT_INFO "${EXPORT_INFO}include_directories(${DIR})\n")
+	set(EXPORT_INFO "${EXPORT_INFO}include_directories(${DIR})\n")
 endforeach()
 
-file(APPEND ${CMAKE_BINARY_DIR}/packages.cmake "${EXPORT_INFO}")
+set(EXPORT_FILE ${CMAKE_BINARY_DIR}/${PACKAGE_NAME}.exports.cmake)
 
+if(EXISTS ${EXPORT_FILE})
+	file(READ ${EXPORT_FILE} OLD_INFO)
+endif()
+if(NOT "${OLD_INFO}" STREQUAL "${EXPORT_INFO}")
+	file(WRITE ${EXPORT_FILE} "${EXPORT_INFO}")
+endif()
