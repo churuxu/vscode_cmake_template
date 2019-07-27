@@ -126,6 +126,7 @@ int test_http(){
 
 	curl_easy_setopt(pCurl, CURLOPT_URL, "https://www.baidu.com"); 	
 	curl_easy_setopt(pCurl, CURLOPT_SSL_VERIFYHOST,0);
+	curl_easy_setopt(pCurl, CURLOPT_SSL_VERIFYPEER,0);
 	curl_easy_setopt(pCurl, CURLOPT_WRITEFUNCTION, &WriteFunction);
 	curl_easy_setopt(pCurl, CURLOPT_ERRORBUFFER, errbuf);
 	CURLcode ret = curl_easy_perform(pCurl);

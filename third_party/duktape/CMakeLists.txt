@@ -48,11 +48,7 @@ endif()
 #-------------------- platform speical --------------------
 if(${WIN32})
 	file(GLOB_RECURSE RC_SRCS "*.rc")
-	add_compile_options(-DUNICODE -D_UNICODE)
-	link_libraries(-lcomctl32 -lpsapi -lws2_32)
-	if(${MINGW} AND ${NO_CONSOLE})		
-		set(LDFLAGS "${LDFLAGS} -Wl,--subsystem,windows")		
-	endif()
+	add_compile_options(-DUNICODE -D_UNICODE)	
 endif()
 
 

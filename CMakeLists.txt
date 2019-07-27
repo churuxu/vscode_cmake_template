@@ -19,7 +19,7 @@ set(CXXFLAGS ${FLAGS})
 
 set(LDFLAGS "")
 
-#set(LIBS "-lz -ljson-parser -lduktape")
+#set(LIBS "z json-parser duktape")
 
 set(DEPS json-parser duktape curl ssl crypto z )
 
@@ -51,7 +51,7 @@ project(${PROJECT_NAME})
 if(${WIN32})
 	file(GLOB_RECURSE RC_SRCS "*.rc")
 	add_compile_options(-DUNICODE -D_UNICODE)
-	link_libraries(-lcomctl32 -lpsapi -lws2_32)
+	link_libraries(comctl32 psapi ws2_32)
 	if(${MINGW})
 		if(${NO_CONSOLE})
 			set(LDFLAGS "${LDFLAGS} -Wl,--subsystem,windows")

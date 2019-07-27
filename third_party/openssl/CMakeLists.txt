@@ -18,7 +18,7 @@ set(PACKAGE_TARGET openssl)
 #-------------------- package build settings --------------------
 
 
-set(FLAGS "-DUNICODE -D_UNICODE -DWIN32_LEAN_AND_MEAN -Wno-overflow")
+set(FLAGS "-DUNICODE -D_UNICODE -DWIN32_LEAN_AND_MEAN")
 set(CFLAGS ${FLAGS})
 set(CXXFLAGS ${FLAGS})
 
@@ -48,8 +48,8 @@ list(APPEND EXLUDES ".*sparcv9cap.c")
 list(APPEND EXLUDES ".*ecp_nistz256_table.c") 
 list(APPEND EXLUDES ".*eng_devcrypto.c") 
 list(APPEND EXLUDES ".*poly1305_base2_44.c") 
- 
-
+list(APPEND EXLUDES ".*poly1305_ieee754.c") 
+list(APPEND EXLUDES ".*aes_x86core.c") 
 
 include_directories(${SOURCE_DIR}/include)
 include_directories(${SOURCE_DIR}/crypto/include)
