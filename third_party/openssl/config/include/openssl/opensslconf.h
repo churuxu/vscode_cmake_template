@@ -89,6 +89,13 @@ extern "C" {
 # define OPENSSL_NO_AFALGENG
 #endif
 
+#ifndef OPENSSL_NO_CAPIENG
+# define OPENSSL_NO_CAPIENG
+#endif
+#ifndef OPENSSL_NO_HW_PADLOCK
+# define OPENSSL_NO_HW_PADLOCK
+#endif
+
 
 /*
  * Sometimes OPENSSSL_NO_xxx ends up with an empty file and some compilers
