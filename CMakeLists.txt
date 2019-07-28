@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.7)
 # CC CXX CFLAGS CXXFLAGS LDFLAGS
 
 #--------------------- generic settings ----------------------
- 
+
 file(RELATIVE_PATH PROJECT_NAME ${CMAKE_CURRENT_LIST_DIR}/.. ${CMAKE_CURRENT_LIST_DIR})
 #set(PROJECT_NAME "proj")
 
@@ -96,12 +96,10 @@ foreach(CMAKEFILE IN LISTS SUB_CMAKES)
 	list(FILTER ALL_HEADERS EXCLUDE REGEX "${DIR}/.*")
 endforeach()
 
-#-------------------- sub cmake exports --------------------
-file(GLOB_RECURSE SUB_EXPORTS *exports.cmake)
-foreach(EXP IN LISTS SUB_EXPORTS)
-	#get_filename_component(DIR ${EXP} DIRECTORY)
-	#message(${EXP})
-	include(${EXP})
+#-------------------- deps --------------------
+set(CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR})
+foreach(DEP IN LISTS DEPS)
+	find_package(${DEP})		
 endforeach()
 
 

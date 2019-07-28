@@ -211,7 +211,7 @@ foreach(DIR IN LISTS INCS)
 	set(EXPORT_INFO "${EXPORT_INFO}include_directories(${DIR})\n")
 endforeach()
 
-set(EXPORT_FILE ${CMAKE_BINARY_DIR}/${PACKAGE_NAME}.exports.cmake)
+set(EXPORT_FILE ${CMAKE_BINARY_DIR}/Find${PACKAGE_NAME}.cmake)
 
 if(EXISTS ${EXPORT_FILE})
 	file(READ ${EXPORT_FILE} OLD_INFO)

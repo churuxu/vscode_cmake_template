@@ -17,7 +17,11 @@ set(PACKAGE_TARGET curl)
 
 set(OPENSSL_CMAKE_DIR ${CMAKE_CURRENT_LIST_DIR}/../openssl)
 add_subdirectory(${OPENSSL_CMAKE_DIR} ${CMAKE_BINARY_DIR}/openssl)
-include(${CMAKE_BINARY_DIR}/openssl.exports.cmake)
+
+
+set(CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR})
+find_package(ssl)	
+find_package(crypto)
 
 
 set(FLAGS "-DCURL_STATICLIB -DBUILDING_LIBCURL -DUSE_OPENSSL -DENABLE_IPV6 -DCURL_DISABLE_LDAP -DHAVE_GETADDRINFO")
@@ -218,7 +222,7 @@ set(EXPORT_INFO "${EXPORT_INFO}add_definitions(-DCURL_STATICLIB)\n")
 	set(EXPORT_INFO "${EXPORT_INFO}include_directories(${SOURCE_DIR}/include)\n")
 #endforeach()
 
-set(EXPORT_FILE ${CMAKE_BINARY_DIR}/${PACKAGE_NAME}.exports.cmake)
+set(EXPORT_FILE ${CMAKE_BINARY_DIR}/Find${PACKAGE_NAME}.cmake)
 
 if(EXISTS ${EXPORT_FILE})
 	file(READ ${EXPORT_FILE} OLD_INFO)

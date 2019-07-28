@@ -244,7 +244,7 @@ set(EXPORT_INFO "${EXPORT_INFO}link_directories(${BUILD_DIR})\n")
 	set(EXPORT_INFO "${EXPORT_INFO}include_directories(${SOURCE_DIR}/include)\n")
 #endforeach()
 
-set(EXPORT_FILE ${CMAKE_BINARY_DIR}/${PACKAGE_NAME}.exports.cmake)
+set(EXPORT_FILE ${CMAKE_BINARY_DIR}/Findssl.cmake)
 
 if(EXISTS ${EXPORT_FILE})
 	file(READ ${EXPORT_FILE} OLD_INFO)
@@ -253,4 +253,11 @@ if(NOT "${OLD_INFO}" STREQUAL "${EXPORT_INFO}")
 	file(WRITE ${EXPORT_FILE} "${EXPORT_INFO}")
 endif()
 
+set(EXPORT_FILE ${CMAKE_BINARY_DIR}/Findcrypto.cmake)
 
+if(EXISTS ${EXPORT_FILE})
+	file(READ ${EXPORT_FILE} OLD_INFO)
+endif()
+if(NOT "${OLD_INFO}" STREQUAL "${EXPORT_INFO}")
+	file(WRITE ${EXPORT_FILE} "${EXPORT_INFO}")
+endif()
