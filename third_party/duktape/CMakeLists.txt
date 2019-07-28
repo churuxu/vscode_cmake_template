@@ -1,64 +1,134 @@
-cmake_minimum_required(VERSION 3.7)
+cmake_minimum_required(VERSION 3.10)
 
-### cmake template for build package with local source ### 
-
-
-
-#-------------------- generic setting --------------------
- 
-file(RELATIVE_PATH PACKAGE_NAME ${CMAKE_CURRENT_LIST_DIR}/.. ${CMAKE_CURRENT_LIST_DIR})
+### cmake template for build package with remote source ### 
 
 
-set(SRC_EXTS *.cpp *.c *.cc)
 
-set(HEADER_EXTS *.h *.hpp)
+set(PACKAGE_NAME duktape)
 
-#list(APPEND EXLUDES ".*CMakeFiles.*")
+set(PACKAGE_VERSION 2.3.0)
+
+set(PACKAGE_URL https://github.com/svaarala/duktape-releases/archive/v${PACKAGE_VERSION}.tar.gz)
+
+set(PACKAGE_TARGET duktape)
+
+#message("package ${PACKAGE_NAME} ${PACKAGE_VERSION}")
+
+set(SRC_ROOT duktape-releases-${PACKAGE_VERSION}/src-noline)
+
+#-------------------- package build settings --------------------
+
+
+
+
 
 set(FLAGS )
 set(CFLAGS ${FLAGS})
 set(CXXFLAGS ${FLAGS})
 
-set(LDFLAGS "")
+#-------------------- generic --------------------
+project(${PACKAGE_NAME})
 
-set(LIBS "")
-
-#for windows gui application  (1=gui 0=console)
-#set(NO_CONSOLE 1)
-
-#main source file name (regex)
-#set(MAIN_FILTER "^main\..*")
-
-#test source file name (regex)
-#set(TEST_FILTER ".*test.*\..*")
-
-
-#-------------------- default variable --------------------
-if(NOT DEFINED NO_CONSOLE)
-	set(NO_CONSOLE 0)
-endif()
-if(NOT DEFINED MAIN_FILTER)
-	set(MAIN_FILTER "^main\..*")
-endif()
-if(NOT DEFINED TEST_FILTER)
-	set(TEST_FILTER ".*test.*\..*")
+if(CMAKE_HOST_WIN32)
+	set(PACKAGE_CACHE_DIR D:/.xpackage) 
+else()
+	set(PACKAGE_CACHE_DIR $ENV{HOME}/.xpackage) 
 endif()
 
-
-#-------------------- platform speical --------------------
-if(${WIN32})
-	file(GLOB_RECURSE RC_SRCS "*.rc")
-	add_compile_options(-DUNICODE -D_UNICODE)	
+if("${CMAKE_BUILD_TYPE}" STREQUAL "")
+	set(CMAKE_BUILD_TYPE Release)
 endif()
 
+macro(save_build_info filename)
+	set(info_ "")
+	set(info_ "${info_}os=${CMAKE_SYSTEM_NAME}\n")
+	set(info_ "${info_}cc=${CMAKE_C_COMPILER}\n")
+	set(info_ "${info_}cc.version=${CMAKE_C_COMPILER_VERSION}\n")
+	set(info_ "${info_}cxx=${CMAKE_CXX_COMPILER}\n")
+	set(info_ "${info_}cxx.version=${CMAKE_CXX_COMPILER_VERSION}\n")
+	set(info_ "${info_}build_type=${CMAKE_BUILD_TYPE}\n")
+	set(info_ "${info_}cflags=${CMAKE_C_FLAGS}\n")
+	set(info_ "${info_}cxxflags=${CMAKE_CXX_FLAGS}\n")	
+	#set(BUILD_INFO "${info_}")	
+	file(WRITE ${filename} "${info_}")
+endmacro()
 
-#-------------------- compiler speical --------------------
+macro(download url name)
+	message("download: ${url}")
+	file(DOWNLOAD ${url} ${name} STATUS result)
+	if(0 IN_LIST result)
+		message("download ok")
+	else()
+		message(FATAL_ERROR "download error")
+	endif()
+endmacro()
 
-if(${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC) #vc
-	add_compile_options(-D_CRT_SECURE_NO_WARNINGS)
-else() #gcc
-	add_compile_options(-Wall)
-endif()
+#download source
+macro(download_source type url dir name)	
+	if(NOT EXISTS ${dir}/source.downloaded)
+		if(${type} STREQUAL "git")
+			exec("git clone --depth ${url} ${dir}/${name}")
+		else()		
+			download(${url} ${dir}/${name})
+		endif()
+		file(TOUCH ${dir}/source.downloaded)
+	else()
+		#message("source already downloaded")
+	endif()
+endmacro()
+
+#unpack 
+macro(unpack_source type dir name)	
+	if(NOT EXISTS ${dir}/source.unpacked)
+		if(${type} STREQUAL "git")
+			message("git folder need unpack")
+			set(result_ 0)
+			set(cmd_ 0)
+		elseif(${type} STREQUAL "tar.gz")
+			file(MAKE_DIRECTORY ${dir}/source)
+			set(cmd_ tar -xzvf ${dir}/${name} -C ${dir}/source)			
+		elseif(${type} STREQUAL "zip")			
+			file(MAKE_DIRECTORY ${dir}/source)
+			set(cmd_ unzip -o ${dir}/${name} -d ${dir}/source)
+		else()
+			message(FATAL_ERROR "not support type ${type}")
+		endif()
+		if(cmd_)
+			message("unpack ${dir}/${name}")
+			execute_process(RESULT_VARIABLE result_ COMMAND ${cmd_})
+		endif()
+		if(0 EQUAL result_)
+			message("unpack ok")
+		else()		
+			message(FATAL_ERROR "unpack error" )
+		endif()		
+		file(TOUCH ${dir}/source.unpacked)
+	else()
+		#message("source already unpacked")
+	endif()
+endmacro()
+
+
+macro(fetch_source url dir)	
+	if(${url} MATCHES ".*.git$")
+		set(fetch_type_ "git")
+		set(fetch_name_ "source")		
+	elseif(${url} MATCHES ".*.tar.gz$")
+		set(fetch_type_ "tar.gz")
+		set(fetch_name_ "source.tar.gz")		
+	else()
+		set(fetch_type_ "zip")
+		set(fetch_name_ "source.zip")		
+	endif()
+	download_source(${fetch_type_} ${url} ${dir} ${fetch_name_})
+	unpack_source(${fetch_type_} ${dir} ${fetch_name_})
+endmacro()
+
+set(CACHE_DIR ${PACKAGE_CACHE_DIR}/${PACKAGE_NAME}/${PACKAGE_VERSION})
+set(SOURCE_DIR ${CACHE_DIR}/source/${SRC_ROOT})
+fetch_source(${PACKAGE_URL} ${CACHE_DIR})
+
+
 
 
 #-------------------- generic flags --------------------
@@ -74,39 +144,22 @@ if(DEFINED LIBS)
 endif()
 
 #-------------------- glob all files --------------------
-file(GLOB_RECURSE ALL_SRCS ${SRC_EXTS})
-file(GLOB_RECURSE ALL_HEADERS ${SRC_EXTS})
-file(GLOB_RECURSE SUB_CMAKES */CMakeLists.txt)
+#message("source dir: ${SOURCE_DIR}")
+file(GLOB_RECURSE C_SRCS ${SOURCE_DIR}/*.c)
+file(GLOB_RECURSE CXX_SRCS ${SOURCE_DIR}/*.cpp)
+file(GLOB_RECURSE ALL_HEADERS ${SOURCE_DIR}/*.h)
 
 
 #-------------------- exlude files --------------------
-list(FILTER ALL_SRCS EXCLUDE REGEX "CMakeFiles")
+list(FILTER C_SRCS EXCLUDE REGEX "CMakeFiles")
+list(FILTER CXX_SRCS EXCLUDE REGEX "CMakeFiles")
 list(FILTER ALL_HEADERS EXCLUDE REGEX "CMakeFiles")
 foreach(EXLUDE IN LISTS EXLUDES) 
-	list(FILTER ALL_SRCS EXCLUDE REGEX ${EXLUDE})
+	list(FILTER C_SRCS EXCLUDE REGEX ${EXLUDE})
+	list(FILTER CXX_SRCS EXCLUDE REGEX ${EXLUDE})
 	list(FILTER ALL_HEADERS EXCLUDE REGEX ${EXLUDE})
 endforeach()
 
-#-------------------- src types --------------------
-set(HAS_TEST 0)
-set(HAS_LIB 0)
-set(HAS_MAIN 0)
-foreach(SRC IN LISTS ALL_SRCS)
-	get_filename_component(FILENAME ${SRC} NAME)	
-	if(${FILENAME} MATCHES ${TEST_FILTER})
-		list(APPEND TEST_SRCS ${SRC})
-		set(HAS_TEST 1)
-		#message("test:"  ${SRC})	
-	elseif(${FILENAME} MATCHES ${MAIN_FILTER})
-		list(APPEND MAIN_SRCS ${SRC})
-		set(HAS_MAIN 1)
-		#message("main:"  ${SRC})
-	else()
-		list(APPEND LIB_SRCS ${SRC})
-		set(HAS_LIB 1)
-		#message("lib :"  ${SRC})	
-	endif()
-endforeach()
 
 #-------------------- includes --------------------
 foreach(FILENAME IN LISTS ALL_HEADERS)
@@ -119,19 +172,37 @@ foreach(INC IN LISTS INCS)
 	include_directories(${INC})
 endforeach()
 
+#-------------------- get build hash --------------------
+
+set(INFO_FILE ${CMAKE_BINARY_DIR}/build_info.txt) 
+save_build_info(${INFO_FILE})
+file(MD5 ${INFO_FILE} BUILD_HASH)
+#message("build_hash: ${BUILD_HASH}")
+set(BUILD_DIR ${CACHE_DIR}/build/${BUILD_HASH})
+file(MAKE_DIRECTORY ${BUILD_DIR})
+file(COPY ${INFO_FILE} DESTINATION ${BUILD_DIR})
+
+
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${BUILD_DIR})
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${BUILD_DIR})
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${BUILD_DIR})
+
 
 #-------------------- build lib --------------------
-set(LIB_TARGET_NAME ${PACKAGE_NAME})
-if(NOT TARGET ${LIB_TARGET_NAME})	
-	if(${HAS_LIB})
-		add_library(${LIB_TARGET_NAME} ${LIB_SRCS})
-		#export(TARGETS ${LIB_TARGET_NAME} FILE ${CMAKE_BINARY_DIR}/${LIB_TARGET_NAME}_targets.cmake)
+set(TARGET_NAME ${PACKAGE_TARGET})
+set(TARGET_FILE ${BUILD_DIR}/lib${TARGET_NAME}.a)
+if(NOT TARGET ${TARGET_NAME})
+	if(EXISTS ${TARGET_FILE})
+		message("-- Import ${TARGET_FILE}")
+		add_library(${TARGET_NAME} STATIC IMPORTED GLOBAL)
+		set_target_properties(${TARGET_NAME} PROPERTIES IMPORTED_LOCATION ${TARGET_FILE})
+	else()
+		message("-- Build ${TARGET_FILE}")
+		add_library(${TARGET_NAME} ${C_SRCS} ${CXX_SRCS})
 	endif()
 endif()
 
 #-------------------- export info --------------------
-get_target_property(BUILD_DIR ${LIB_TARGET_NAME} BINARY_DIR)
-
 set(EXPORT_INFO "")
 set(EXPORT_INFO "${EXPORT_INFO}#package ${PACKAGE_NAME}\n")
 set(EXPORT_INFO "${EXPORT_INFO}link_directories(${BUILD_DIR})\n")
@@ -140,7 +211,7 @@ foreach(DIR IN LISTS INCS)
 	set(EXPORT_INFO "${EXPORT_INFO}include_directories(${DIR})\n")
 endforeach()
 
-set(EXPORT_FILE ${CMAKE_BINARY_DIR}/Find${PACKAGE_NAME}.cmake)
+set(EXPORT_FILE ${CMAKE_BINARY_DIR}/Find${TARGET_NAME}.cmake)
 
 if(EXISTS ${EXPORT_FILE})
 	file(READ ${EXPORT_FILE} OLD_INFO)
@@ -148,8 +219,5 @@ endif()
 if(NOT "${OLD_INFO}" STREQUAL "${EXPORT_INFO}")
 	file(WRITE ${EXPORT_FILE} "${EXPORT_INFO}")
 endif()
-
-
-
 
 
