@@ -39,7 +39,10 @@
             "environment": [],
             "externalConsole": true,
             "MIMode": "gdb",
-            "miDebuggerPath": "${env:GDB_PATH}",
+            "windows": {
+                "miDebuggerPath": "gdb.exe"
+            },
+            "miDebuggerPath": "gdb",
             "setupCommands": [
                 {
                     "description": "Enable pretty-printing for gdb",
@@ -47,6 +50,31 @@
                     "ignoreFailures": true
                 }
             ]
+        },
+        {           
+            "name": "(gdb) arm_none_eabi",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/${workspaceRootFolderName}.elf",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": true,
+            "MIMode": "gdb",
+            "windows": {
+                "miDebuggerPath": "arm-none-eabi-gdb.exe"
+            },
+            "miDebuggerPath": "arm-none-eabi-gdb",
+            "preLaunchTask": "StartGdbServer",
+            "setupCommands": [ 
+                {                   
+                    "text": "target remote localhost:2331"                    
+                },     
+                {                   
+                    "text": "monitor reset"                    
+                }
+            ]         
         }
     ]
 }

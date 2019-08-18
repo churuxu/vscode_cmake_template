@@ -11,7 +11,7 @@ set(SRC_EXTS *.cpp *.c *.cc)
 
 set(HEADER_EXTS *.h *.hpp)
 
-#list(APPEND EXLUDES ".*CMakeFiles.*")
+#list(APPEND EXCLUDES ".*CMakeFiles.*")
 
 set(FLAGS )
 set(CFLAGS ${FLAGS})
@@ -19,9 +19,8 @@ set(CXXFLAGS ${FLAGS})
 
 set(LDFLAGS "")
 
-#set(LIBS "z json-parser duktape")
 
-set(DEPS json-parser duktape curl ssl crypto z )
+set(LIBS json-parser)
 
 
 #for windows gui application  (1=gui 0=console)
@@ -32,6 +31,15 @@ set(DEPS json-parser duktape curl ssl crypto z )
 
 #test source file name (regex)
 #set(TEST_FILTER ".*test.*\..*")
+
+
+#----------------------- external config ----------------------
+if(EXISTS "${CMAKE_CURRENT_LIST_DIR}/config/selected.txt")
+	file(STRINGS "${CMAKE_CURRENT_LIST_DIR}/config/selected.txt" CONFIG_SEL LIMIT_COUNT 1)
+	set(CONFIG_DIR ${CMAKE_CURRENT_LIST_DIR}/config/${CONFIG_SEL})
+endif()
+include(${CONFIG_DIR}/config.cmake OPTIONAL)
+
 
 
 #-------------------- default variable --------------------
@@ -70,16 +78,14 @@ endif()
 
 
 #-------------------- generic flags --------------------
-set(CMAKE_C_FLAGS ${CFLAGS})
-set(CMAKE_CXX_FLAGS ${CXXFLAGS})
-set(CMAKE_SHARED_LINKER_FLAGS ${LDFLAGS})
-set(CMAKE_EXE_LINKER_FLAGS ${LDFLAGS})
+set(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} ${CFLAGS})
+set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} ${CXXFLAGS})
+set(CMAKE_SHARED_LINKER_FLAGS ${CMAKE_SHARED_LINKER_FLAGS} ${LDFLAGS})
+set(CMAKE_EXE_LINKER_FLAGS ${CMAKE_EXE_LINKER_FLAGS} ${LDFLAGS})
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
 
-if(DEFINED LIBS)
-	link_libraries(${LIBS})
-endif()
+
 
 
 #-------------------- glob all files --------------------
@@ -87,7 +93,7 @@ file(GLOB_RECURSE ALL_SRCS ${SRC_EXTS})
 file(GLOB_RECURSE ALL_HEADERS ${SRC_EXTS})
 file(GLOB_RECURSE SUB_CMAKES */CMakeLists.txt)
 
-#-------------------- sub cmake directory --------------------
+#-------------------- sub cmake directorys --------------------
 foreach(CMAKEFILE IN LISTS SUB_CMAKES)
 	get_filename_component(DIR ${CMAKEFILE} DIRECTORY)
 	#message("sub dir:${DIR}")
@@ -96,19 +102,22 @@ foreach(CMAKEFILE IN LISTS SUB_CMAKES)
 	list(FILTER ALL_HEADERS EXCLUDE REGEX "${DIR}/.*")
 endforeach()
 
-#-------------------- deps --------------------
+
+#-------------------- deps libs --------------------
 set(CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR})
-foreach(DEP IN LISTS DEPS)
-	find_package(${DEP})		
+foreach(DEP IN LISTS LIBS)
+if(EXISTS ${CMAKE_MODULE_PATH}/Find${DEP}.cmake)
+	find_package(${DEP})
+endif()
 endforeach()
 
 
-#-------------------- exlude files --------------------
+#-------------------- exclude files --------------------
 list(FILTER ALL_SRCS EXCLUDE REGEX "CMakeFiles")
 list(FILTER ALL_HEADERS EXCLUDE REGEX "CMakeFiles")
-foreach(EXLUDE IN LISTS EXLUDES) 
-	list(FILTER ALL_SRCS EXCLUDE REGEX ${EXLUDE})
-	list(FILTER ALL_HEADERS EXCLUDE REGEX ${EXLUDE})
+foreach(EXCL IN LISTS EXCLUDES) 
+	list(FILTER ALL_SRCS EXCLUDE REGEX ${EXCL})
+	list(FILTER ALL_HEADERS EXCLUDE REGEX ${EXCL})
 endforeach()
 
 #-------------------- src types --------------------
@@ -143,6 +152,13 @@ foreach(INC IN LISTS INCS)
 	include_directories(${INC})
 endforeach()
 
+#----------------------- external build ----------------------
+include(${CONFIG_DIR}/build.cmake OPTIONAL)
+if(EXISTS ${CONFIG_DIR}/build.cmake)	
+	return()
+endif()
+
+#-- default build
 
  #-------------------- build lib --------------------
 if(${HAS_MAIN})
@@ -162,11 +178,13 @@ if(${HAS_MAIN})
 		target_link_libraries(${MAIN_TARGET_NAME} ${LIB_TARGET_NAME} ${CONAN_LIBS})
 		add_dependencies(${MAIN_TARGET_NAME} ${LIB_TARGET_NAME})
 	endif()	
-	foreach(DEP IN LISTS DEPS)		
+	foreach(DEP IN LISTS LIBS)		
 		target_link_libraries(${MAIN_TARGET_NAME} ${DEP} )
 		add_dependencies(${MAIN_TARGET_NAME} ${DEP})		
 	endforeach()	
 endif()
+
+
 
 #-------------------- build unit test --------------------
 set(TEST_TARGET_NAME ${PROJECT_NAME}-test)
@@ -176,11 +194,16 @@ if(${HAS_TEST})
 		target_link_libraries(${TEST_TARGET_NAME} ${LIB_TARGET_NAME} ${CONAN_LIBS})
 		add_dependencies(${TEST_TARGET_NAME} ${LIB_TARGET_NAME})
 	endif()
-	foreach(DEP IN LISTS DEPS)
+	foreach(DEP IN LISTS LIBS)
 		target_link_libraries(${MAIN_TARGET_NAME} ${DEP} )
 		add_dependencies(${MAIN_TARGET_NAME} ${DEP})		
 	endforeach()	
 	target_compile_definitions(${TEST_TARGET_NAME} PUBLIC UNITTEST)
 	target_compile_definitions(${TEST_TARGET_NAME} PUBLIC USE_GTEST)		
 endif()
+
+
+
+
+
 

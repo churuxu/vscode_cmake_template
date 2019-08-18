@@ -17,6 +17,9 @@ set(FLAGS )
 set(EXLUDES ".*bindings/.*" ".*tests/.*")
 
 
+if(NOT ${PACKAGE_NAME} IN_LIST LIBS)
+	return()
+endif()
 
 xpackage_init(${PACKAGE_NAME} ${PACKAGE_VERSION} ${PACKAGE_URL} "${FLAGS}" SRC_ROOT BUILD_ROOT)
 

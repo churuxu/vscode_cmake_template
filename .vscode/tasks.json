@@ -4,7 +4,15 @@
     "version": "2.0.0",
     "tasks": [         
         {
-             "label": "make-dir",             
+            "label": "Configure",             
+            "type": "shell",
+            "command":"node configure.js",            
+            "problemMatcher":[],
+            "presentation": {                
+                "focus": true                
+            }
+       },{
+             "label": "MakeDirectory",             
              "type": "shell",
              "command":"mkdir -f build",
              "windows": {
@@ -13,22 +21,23 @@
              "problemMatcher":[]
         },       
         {            
-            "label": "cmake-generate",
+            "label": "CMakeGenerate",
             "type": "shell",
             "options": {"cwd": "./build"},
             "command": "cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Debug" ,
             "problemMatcher":[],
             "dependsOn":[
-                "make-dir"
-            ],           
-        }
+                "MakeDirectory"
+            ],
+            "group": "none"                
+        },
         {
-            "label": "build",
+            "label": "Build",
             "type": "shell",
             "options": {"cwd": "./build"},
             "command": "ninja",
             "dependsOn":[
-                "cmake-generate"
+                "CMakeGenerate"
             ],
             
             "problemMatcher":{
@@ -47,9 +56,26 @@
                 "kind": "build",
                 "isDefault": true
             }
-        },        
+        },
         {
-            "label": "clean",
+            "label": "Flash",
+            "type": "shell",
+            "options": {"cwd": "./build"},
+            "command": "ninja flash",          
+            
+            "problemMatcher":[]
+        },  {
+            "label": "StartGdbServer",
+            "type": "shell",
+            "options": {"cwd": "./build"},
+            "command": "ninja gdb_server",          
+            "windows": {
+                "command": "cmd /c gdb_server.bat",     
+            },
+            "problemMatcher":[]
+        },      
+        {
+            "label": "Clean",
             "type":"shell", 
             "command":"rm -rf build", 
             "windows": {
@@ -66,7 +92,7 @@
             "problemMatcher":[]
        },
         {
-            "label": "test",
+            "label": "Test",
             "type":"shell", 
             "options": {"cwd": "./build"},
             "command":"${workspaceRootFolderName}-test", 
@@ -74,7 +100,7 @@
                 "command":"cmd /c ${workspaceRootFolderName}-test", 
             },
             "dependsOn":[
-                "build-test"
+                "Build"
             ],
             "problemMatcher":[]
        }

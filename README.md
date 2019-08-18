@@ -13,6 +13,13 @@ vscode cmake 项目工程模板
 - 代码中通过UNITTEST宏区分是单元测试还是主程序
 - 自动引用子目录下的所有CMakeLists.txt模块
 - 此项目里包含子模块示例，支持编译远程代码库
+- 支持多平台，在config目录建立不同平台配置，通过node configure.js命令选择平台
+
+
+此模板示例已支持平台
+--------
+- PC (Window Linux Mac)
+- STM32 
 
 
 所需软件
@@ -21,22 +28,23 @@ vscode cmake 项目工程模板
   - 添加到PATH环境变量
 - cmake
   - bin目录添加到PATH环境变量
-- gcc (windows下使用mingw)
+- gcc (Windows需要mingw)(ARM单片机需要arm-none-eabi-gcc)
   - bin目录添加到PATH环境变量
-- node (可选)
+- node 
   - 添加到PATH环境变量
-- unzip\tar(可选)
+- unzip\tar (可选,远程代码模块需要)
   - 添加到PATH环境变量
 - vscode  
   - 安装插件：C/C++、Catch2 and Google Test Explorer
-
+- jlink (可选,单片机烧写需要)
+  - 添加到PATH环境变量
   
 VSCode Task
 ------------
-- build 编译
-- clean 清理
-- test 运行单元测试
-- c_cpp_properties-generate 生成c_cpp_properties.json
+- Build 编译
+- Clean 清理
+- Test 运行单元测试
+- Flash 烧写程序到单片机
 
 
 
