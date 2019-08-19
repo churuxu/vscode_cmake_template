@@ -1,0 +1,9 @@
+file(TO_CMAKE_PATH "$ENV{NDK_HOME}" NDK_HOME)
+
+set(CMAKE_SYSTEM_NAME Android)
+set(CMAKE_SYSTEM_VERSION 21) #api level
+set(CMAKE_ANDROID_NDK ${NDK_HOME})
+set(CMAKE_ANDROID_STL_TYPE gnustl_static)
+
+
+
