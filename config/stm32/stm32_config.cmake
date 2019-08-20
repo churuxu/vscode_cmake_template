@@ -11,5 +11,5 @@ set(CMAKE_SIZE "arm-none-eabi-size")
 
 enable_language(ASM)
 
-add_compile_options(-mcpu=cortex-m3 -mthumb -ffunction-sections -fdata-sections -nostdlib )
+add_compile_options(-mcpu=${CPU_TYPE} -mthumb -ffunction-sections -fdata-sections -nostdlib )
 
