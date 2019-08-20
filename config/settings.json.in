@@ -15,6 +15,11 @@
   "files.associations": {
     "*.h": "cpp"   
   },
+
   "C_Cpp.errorSquiggles": "Disabled",
   "C_Cpp.autoAddFileAssociations": false,
+
+  "BuildConfig":"${CONFIG_PATH}",
+  "BuildConfigWin32":"${CONFIG_PATH_WIN32}"  
+    
 }

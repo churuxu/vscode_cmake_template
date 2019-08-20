@@ -1,4 +1,5 @@
 const fs = require("fs");
+const path = require("path");
 
 /*
 用于提示选择配置目录
@@ -8,12 +9,38 @@ const fs = require("fs");
 */
 
 const save_file_ = "config/selected.txt";
+const setting_in_file_ = "config/settings.json.in";
+const setting_file_ = ".vscode/settings.json";
 
 var current_select_ = "config";
 
 var current_dirs_ = [];
 
 var finish_ = false;
+
+
+
+//选择结果处理
+function finishSelect(sel){
+	console.log("Selected Config: " + current_select_);
+	fs.writeFileSync(save_file_, current_select_);	
+	
+	try{
+		var dir = path.posix.normalize(sel);
+		var dir_win32 = path.win32.normalize(sel);
+		dir_win32 = dir_win32.replace("\\","\\\\");
+		var data = fs.readFileSync(setting_in_file_);
+		var str = data.toString();
+		str = str.replace("${CONFIG_PATH}", dir);
+		str = str.replace("${CONFIG_PATH_WIN32}", dir_win32);
+		fs.writeFileSync(setting_file_, str);
+		
+	}catch(e){
+		console.log(e);
+	}	
+	process.exit(0);
+}
+
 
 //显示输入提示
 function displaySelect(arr, reselect){
@@ -47,11 +74,8 @@ function selectDir(dir){
 		finish_ = true;
 		console.log("------------------------------------------");
 		current_select_ = current_select_.substr(7); //remove "config/"
-		console.log("Config: " + current_select_);
-		fs.writeFileSync(save_file_, current_select_);
-		//var cmakestr = "include(${CMAKE_CURRENT_LIST_DIR}/" + current_select_ + " OPTIONAL)";
-		//fs.writeFileSync(cmake_file_, cmakestr);
-		process.exit(0);
+		finishSelect(current_select_);
+
 	}
 }
 
@@ -79,3 +103,8 @@ process.stdin.on('data', function(data){
 });
 
 selectDir(current_select_);
+
+
+
+
+

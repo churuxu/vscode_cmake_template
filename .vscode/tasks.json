@@ -1,7 +1,7 @@
 {
     // See https://go.microsoft.com/fwlink/?LinkId=733558
     // for the documentation about the tasks.json format
-    "version": "2.0.0",
+    "version": "2.0.0",   
     "tasks": [         
         {
             "label": "Configure",             
@@ -14,17 +14,17 @@
        },{
              "label": "MakeDirectory",             
              "type": "shell",
-             "command":"mkdir -f build",
+             "command":"mkdir -p -f build/${config:BuildConfig}",
              "windows": {
-                "command":"cmd /c if not exist build md build", 
+                "command":"cmd /c if not exist build\\${config:BuildConfigWin32} md build\\${config:BuildConfigWin32}", 
              }, 
              "problemMatcher":[]
         },       
         {            
             "label": "CMakeGenerate",
             "type": "shell",
-            "options": {"cwd": "./build"},
-            "command": "cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Debug" ,
+            "options": {"cwd": "./build/${config:BuildConfig}"},
+            "command": "cmake -G Ninja \"${workspaceFolder}\" -DCMAKE_BUILD_TYPE=Debug" ,
             "problemMatcher":[],
             "dependsOn":[
                 "MakeDirectory"
@@ -34,7 +34,7 @@
         {
             "label": "Build",
             "type": "shell",
-            "options": {"cwd": "./build"},
+            "options": {"cwd": "./build/${config:BuildConfig}"},
             "command": "ninja",
             "dependsOn":[
                 "CMakeGenerate"
@@ -42,7 +42,7 @@
             
             "problemMatcher":{
                 "owner": "cpp",
-                "fileLocation": ["relative", "${workspaceFolder}/build"],
+                "fileLocation": ["relative", "${workspaceFolder}/build/${config:BuildConfig}"],
                 "pattern": {
                     "regexp": "^(.*):(\\d+):(\\d+):.*\\s+(warning|error):\\s+(.*)$",
                     "file": 1,
@@ -60,14 +60,14 @@
         {
             "label": "Flash",
             "type": "shell",
-            "options": {"cwd": "./build"},
+            "options": {"cwd": "./build/${config:BuildConfig}"},
             "command": "ninja flash",          
             
             "problemMatcher":[]
         },  {
             "label": "StartGdbServer",
             "type": "shell",
-            "options": {"cwd": "./build"},
+            "options": {"cwd": "./build/${config:BuildConfig}"},
             "command": "ninja gdb_server",          
             "windows": {
                 "command": "cmd /c gdb_server.bat",     
@@ -77,31 +77,10 @@
         {
             "label": "Clean",
             "type":"shell", 
-            "command":"rm -rf build", 
+            "command":"rm -rf build/${config:BuildConfig}", 
             "windows": {
-                "command":"cmd /c rd /s /q build", 
+                "command":"cmd /c rd /s /q build\\${config:BuildConfigWin32}", 
             },           
-            "problemMatcher":[]
-       }
-       ,
-        {
-            "label": "c_cpp_properties-generate",
-            "type":"shell", 
-            "options": {"cwd": ".vscode"},
-            "command":"node generate_c_cpp_properties.js",                       
-            "problemMatcher":[]
-       },
-        {
-            "label": "Test",
-            "type":"shell", 
-            "options": {"cwd": "./build"},
-            "command":"${workspaceRootFolderName}-test", 
-			"windows": {
-                "command":"cmd /c ${workspaceRootFolderName}-test", 
-            },
-            "dependsOn":[
-                "Build"
-            ],
             "problemMatcher":[]
        }
     ]

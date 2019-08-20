@@ -3,6 +3,13 @@
 vscode cmake 项目工程模板
 
 
+支持平台
+--------
+- PC (Window Linux Mac)
+- Android
+- STM32 
+
+
 项目工程简介
 -----------
 - 当前目录和子目录下所有c cc cpp文件作为源码
@@ -15,11 +22,6 @@ vscode cmake 项目工程模板
 - 此项目里包含子模块示例，支持编译远程代码库
 - 支持多平台，在config目录建立不同平台配置，通过node configure.js命令选择平台
 
-
-此模板示例已支持平台
---------
-- PC (Window Linux Mac)
-- STM32 
 
 
 所需软件
@@ -38,12 +40,14 @@ vscode cmake 项目工程模板
   - 安装插件：C/C++、Catch2 and Google Test Explorer
 - jlink (可选,单片机烧写需要)
   - 添加到PATH环境变量
+- ndk (Android需要)
+  - 新建NDK_HOME环境变量指向ndk安装目录
   
 VSCode Task
 ------------
+- Configure 选择目标编译平台
 - Build 编译
 - Clean 清理
-- Test 运行单元测试
 - Flash 烧写程序到单片机
 
 
