@@ -73,7 +73,7 @@ xpackage_glob_src(SRCS ${HAL_DRIVER_DIR}/Src/*.c  EXCLUDES)
 list(APPEND SRCS ${CMSIS_ST_DIR}/Source/Templates/system_stm32f4xx.c)
 list(APPEND SRCS ${CMSIS_ST_DIR}/Source/Templates/gcc/startup_${mcu_define_lcase}.s)
 
-xpackage_build_target(${PACKAGE_NAME} ${BUILD_ROOT} SRCS EXPORT_INCS "")
+xpackage_build_target(${PACKAGE_NAME} ${BUILD_ROOT} SRCS EXPORT_INCS FLAGS)
 
 
 
