@@ -90,7 +90,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
 
 #-------------------- glob all files --------------------
 file(GLOB_RECURSE ALL_SRCS ${SRC_EXTS})
-file(GLOB_RECURSE ALL_HEADERS ${SRC_EXTS})
+file(GLOB_RECURSE ALL_HEADERS ${HEADER_EXTS})
 file(GLOB_RECURSE SUB_CMAKES */CMakeLists.txt)
 
 #-------------------- sub cmake directorys --------------------
