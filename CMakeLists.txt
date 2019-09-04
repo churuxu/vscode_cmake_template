@@ -11,11 +11,9 @@ set(SRC_EXTS *.cpp *.c *.cc)
 
 set(HEADER_EXTS *.h *.hpp)
 
-#list(APPEND EXCLUDES ".*CMakeFiles.*")
+list(APPEND EXCLUDES ".*/config/.*")
 
 set(FLAGS )
-set(CFLAGS ${FLAGS})
-set(CXXFLAGS ${FLAGS})
 
 set(LDFLAGS "")
 
@@ -37,6 +35,7 @@ set(LIBS json-parser)
 if(EXISTS "${CMAKE_CURRENT_LIST_DIR}/config/selected.txt")
 	file(STRINGS "${CMAKE_CURRENT_LIST_DIR}/config/selected.txt" CONFIG_SEL LIMIT_COUNT 1)
 	set(CONFIG_DIR ${CMAKE_CURRENT_LIST_DIR}/config/${CONFIG_SEL})
+	message("-- Configuring with ${CONFIG_SEL}")
 endif()
 include(${CONFIG_DIR}/config.cmake OPTIONAL)
 
@@ -52,6 +51,11 @@ endif()
 if(NOT DEFINED TEST_FILTER)
 	set(TEST_FILTER ".*test.*\..*")
 endif()
+if(NOT DEFINED BUILD_TEST)
+	set(BUILD_TEST 1)
+endif()
+set(CFLAGS ${FLAGS})
+set(CXXFLAGS ${FLAGS})
 
 project(${PROJECT_NAME})
 
@@ -90,7 +94,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
 
 #-------------------- glob all files --------------------
 file(GLOB_RECURSE ALL_SRCS ${SRC_EXTS})
-file(GLOB_RECURSE ALL_HEADERS ${SRC_EXTS})
+file(GLOB_RECURSE ALL_HEADERS ${HEADER_EXTS})
 file(GLOB_RECURSE SUB_CMAKES */CMakeLists.txt)
 
 #-------------------- sub cmake directorys --------------------
@@ -152,6 +156,11 @@ foreach(INC IN LISTS INCS)
 	include_directories(${INC})
 endforeach()
 
+#---------------- defines --------------
+foreach(DEF IN LISTS DEFINES)
+	add_definitions(-D${DEF})
+endforeach()
+
 #----------------------- external build ----------------------
 include(${CONFIG_DIR}/build.cmake OPTIONAL)
 if(EXISTS ${CONFIG_DIR}/build.cmake)	
@@ -188,7 +197,7 @@ endif()
 
 #-------------------- build unit test --------------------
 set(TEST_TARGET_NAME ${PROJECT_NAME}-test)
-if(${HAS_TEST})
+if(${HAS_TEST} AND ${BUILD_TEST})
 	add_executable(${TEST_TARGET_NAME} ${TEST_SRCS})
 	if(${HAS_LIB})
 		target_link_libraries(${TEST_TARGET_NAME} ${LIB_TARGET_NAME} ${CONAN_LIBS})
