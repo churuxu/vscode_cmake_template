@@ -17,6 +17,7 @@ set(FLAGS )
 
 set(LDFLAGS "")
 
+set(INCS ${CMAKE_CURRENT_LIST_DIR})
 
 set(LIBS json-parser)
 

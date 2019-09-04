@@ -2,10 +2,12 @@
 
 #-------------------- build wasm --------------------
 
-add_executable(${PROJECT_NAME}.wasm ${LIB_SRCS} ${MAIN_SRCS})
+set(MAIN_TARGET ${PROJECT_NAME}.wasm) 
+
+add_executable(${MAIN_TARGET} ${LIB_SRCS} ${MAIN_SRCS})
 
 foreach(DEP IN LISTS LIBS)		
-	target_link_libraries(${PROJECT_NAME}.wasm  ${DEP} )
-	add_dependencies(${PROJECT_NAME}.wasm  ${DEP})		
+	target_link_libraries(${MAIN_TARGET}  ${DEP} )
+	add_dependencies(${MAIN_TARGET}  ${DEP})		
 endforeach()	
 

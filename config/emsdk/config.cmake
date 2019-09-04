@@ -8,12 +8,15 @@ endif()
 get_filename_component(EMSDK ${EMSDK_PROG} DIRECTORY)
 
 if(${CMAKE_HOST_WIN32})
-set(CMAKE_C_COMPILER "${EMSDK}/fastcomp/emscripten/emcc.bat" )
-set(CMAKE_CXX_COMPILER "${EMSDK}/fastcomp/emscripten/em++.bat" )
+set(PROG_EXT .bat)
 else()
-set(CMAKE_C_COMPILER "${EMSDK}/fastcomp/emscripten/emcc" )
-set(CMAKE_CXX_COMPILER "${EMSDK}/fastcomp/emscripten/em++" )
+set(PROG_EXT )
 endif()
 
+set(CMAKE_C_COMPILER "${EMSDK}/fastcomp/emscripten/emcc${PROG_EXT}" )
+set(CMAKE_CXX_COMPILER "${EMSDK}/fastcomp/emscripten/em++${PROG_EXT}" )
+set(CMAKE_AR "${EMSDK}/fastcomp/emscripten/emar${PROG_EXT}" )
 
-set(FLAGS "-s WASM=1")
+
+add_compile_options(-s WASM=1)
+
