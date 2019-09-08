@@ -1,0 +1,12 @@
+{
+    "configurations": [
+        {
+            "name": "Default",            
+            "cStandard": "c11",
+            "cppStandard": "c++11",
+            "compileCommands": "${workspaceFolder}/build/${config:BuildConfig}/compile_commands.json",
+            "intelliSenseMode": "gcc-x64"            
+        }
+    ],
+    "version": 4
+}
