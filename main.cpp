@@ -135,11 +135,36 @@ int test_http(){
 }
 */
 
+
+void print_strs(char* str){
+	char* pstr;
+	pstr = strtok(str, " "); 
+	printf("---------\n");
+	printf("%s\n", pstr);
+	while(pstr){
+		pstr = strtok(NULL, " ");
+		if(pstr)printf("%s\n", pstr);
+	}
+}
+
+void test(){
+	
+	char str1[] = "AT\n";
+	char str2[] = "AT TEST";
+	char str3[] = "AT TEST OK\n";
+	print_strs(str1);
+	
+	print_strs(str2);
+	print_strs(str3);
+}
+
+
+
 int main(){
 	uint16_t crc = crc16(0, (uint8_t*)"123456", 6);
 	printf("123456\n");
 	printf("crc16=%04x\n", (int)crc);	
-	
+	test();
 	//uint32_t crc32 = crc32_z(0, (uint8_t*)"123456", 6);
 	//printf("crc32=%08x\n", crc32);
 	/*auto json = */json_parse("{\"id\":123}", 3);
